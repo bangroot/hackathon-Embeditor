@@ -1,9 +1,6 @@
 package org.jetbrains.plugins.embeditor;
 
-import com.intellij.codeInsight.completion.CodeCompletionHandlerBase;
-import com.intellij.codeInsight.completion.CompletionPhase;
-import com.intellij.codeInsight.completion.CompletionProgressIndicator;
-import com.intellij.codeInsight.completion.CompletionType;
+import com.intellij.codeInsight.completion.*;
 import com.intellij.codeInsight.completion.impl.CompletionServiceImpl;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.openapi.application.ApplicationManager;
@@ -45,13 +42,48 @@ import static com.google.common.collect.Sets.newHashSet;
 public class EmbeditorRequestHandler {
   private static final Logger LOG = Logger.getInstance(EmbeditorRequestHandler.class);
 
+  // todo: could be optimized, we should not perform full completion cycle in order to retrieve start offset
+  // XML-RPC interface method - keep the signature intact
+  @SuppressWarnings("UnusedDeclaration")
+  public int getStartCompletionOffset(@NotNull final String path, final int line, final int column) {
+    LOG.debug("getStartCompletionOffset(" + path + ":" + line + ":" + column);
+
+    final int[] result = {0};
+    performCompletion(path, line, column, new CompletionCallback() {
+      @Override
+      public void completionFinished(CompletionParameters parameters, LookupElement[] items, Document document) {
+        int offset = parameters.getPosition().getTextRange().getStartOffset();
+        int lineNumber = document.getLineNumber(offset);
+        result[0] = offset - document.getLineStartOffset(lineNumber);
+      }
+    });
+    return result[0];
+  }
+
   // XML-RPC interface method - keep the signature intact
   @NotNull
   @SuppressWarnings("UnusedDeclaration")
-  public String[] getCompletionVariants(@NotNull final String path, final int offset) {
-    final Collection<String> variants = newHashSet();
-    LOG.debug("getCompletionVariants(" + path + ", " + offset);
+  public String[] getCompletionVariants(@NotNull final String path, final int line, final int column) {
+    LOG.debug("getCompletionVariants(" + path + ":" + line + ":" + column);
 
+    final Collection<String> variants = newHashSet();
+
+    performCompletion(path, line, column, new CompletionCallback() {
+      @Override
+      public void completionFinished(CompletionParameters parameters, LookupElement[] items, Document document) {
+        variants.addAll(ContainerUtil.map(items, new Function<LookupElement, String>() {
+          @NotNull
+          @Override
+          public String fun(@NotNull LookupElement lookupElement) {
+            return lookupElement.getLookupString();
+          }
+        }));
+      }
+    });
+    return variants.size() > 0 ? variants.toArray(new String[variants.size()]) : ArrayUtil.EMPTY_STRING_ARRAY;
+  }
+
+  private void performCompletion(final String path, final int line, final int column, final CompletionCallback completionCallback) {
     UIUtil.invokeAndWaitIfNeeded(new Runnable() {
       @Override
       public void run() {
@@ -65,6 +97,7 @@ public class EmbeditorRequestHandler {
             if (document != null) {
 
               final Editor editor = editorFactory.createEditor(document, project, targetVirtualFile, false);
+              int offset = document.getLineStartOffset(line) + column;
               editor.getCaretModel().moveToOffset(offset);
               CommandProcessor.getInstance().executeCommand(project, new Runnable() {
                 @Override
@@ -78,13 +111,7 @@ public class EmbeditorRequestHandler {
                                                       @NotNull LookupElement[] items,
                                                       boolean hasModifiers) {
                       CompletionServiceImpl.setCompletionPhase(new CompletionPhase.ItemsCalculated(indicator));
-                      variants.addAll(ContainerUtil.map(items, new Function<LookupElement, String>() {
-                        @NotNull
-                        @Override
-                        public String fun(@NotNull LookupElement lookupElement) {
-                          return lookupElement.getLookupString();
-                        }
-                      }));
+                      completionCallback.completionFinished(indicator.getParameters(), items, document);
                     }
                   };
 
@@ -99,7 +126,6 @@ public class EmbeditorRequestHandler {
         }
       }
     });
-    return variants.size() > 0 ? variants.toArray(new String[variants.size()]) : ArrayUtil.EMPTY_STRING_ARRAY;
   }
 
   @Nullable
@@ -162,5 +188,9 @@ public class EmbeditorRequestHandler {
         return LocalFileSystem.getInstance().refreshAndFindFileByIoFile(file);
       }
     });
+  }
+
+  private static interface CompletionCallback {
+    void completionFinished(CompletionParameters parameters, LookupElement[] items, Document document);
   }
 }

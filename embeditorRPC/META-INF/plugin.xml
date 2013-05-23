@@ -1,0 +1,15 @@
+<idea-plugin version="2" xmlns:xi="http://www.w3.org/2001/XInclude">
+    <name>Embeditor</name>
+    <id>org.jetbrains.plugins.embeditor.rpc</id>
+    <version>0.1</version>
+    <vendor>Dmtiry Trofimov, Andrey Vlasovskikh, Alexander Zolotov</vendor>
+    <description>RPC server for external editors</description>
+    <depends>com.intellij.modules.platform</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <httpRequestHandler id="embeditor" implementation="org.jetbrains.plugins.embeditor.EditorRequestHandler"/>
+
+
+        <errorHandler implementation="com.intellij.diagnostic.ITNReporter"/>
+    </extensions>
+</idea-plugin>

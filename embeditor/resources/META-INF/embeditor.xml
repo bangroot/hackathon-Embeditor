@@ -1,0 +1,5 @@
+<idea-plugin version="2">
+  <extensions defaultExtensionNs="com.intellij">
+    <fileEditorProvider implementation="com.jetbrains.plugins.embeditor.EmbeddedTerminalEditorProvider"/>
+  </extensions>
+</idea-plugin>

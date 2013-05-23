@@ -1,8 +1,10 @@
 package org.jetbrains.plugins.embeditor;
 
 import com.intellij.codeInsight.completion.CodeCompletionHandlerBase;
+import com.intellij.codeInsight.completion.CompletionPhase;
 import com.intellij.codeInsight.completion.CompletionProgressIndicator;
 import com.intellij.codeInsight.completion.CompletionType;
+import com.intellij.codeInsight.completion.impl.CompletionServiceImpl;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.command.CommandProcessor;
@@ -46,23 +48,24 @@ public class EmbeditorRequestHandler {
   // XML-RPC interface method - keep the signature intact
   @NotNull
   @SuppressWarnings("UnusedDeclaration")
-  public String[] getCompletionVariants(@NotNull String path, int offset) {
+  public String[] getCompletionVariants(@NotNull final String path, final int offset) {
+    final Collection<String> variants = newHashSet();
     LOG.debug("getCompletionVariants(" + path + ", " + offset);
 
-    try {
-      final PsiFile targetPsiFile = findTargetFile(path);
-      VirtualFile targetVirtualFile = targetPsiFile != null ? targetPsiFile.getVirtualFile() : null;
-      if (targetPsiFile != null && targetVirtualFile != null) {
-        EditorFactory editorFactory = EditorFactory.getInstance();
-        final Project project = targetPsiFile.getProject();
-        Document document = PsiDocumentManager.getInstance(project).getDocument(targetPsiFile);
-        if (document != null) {
-          final Editor editor = editorFactory.createEditor(document, project, targetVirtualFile, false);
-          editor.getCaretModel().moveToOffset(offset);
-          final Collection<String> variants = newHashSet();
-          UIUtil.invokeAndWaitIfNeeded(new Runnable() {
-            @Override
-            public void run() {
+    UIUtil.invokeAndWaitIfNeeded(new Runnable() {
+      @Override
+      public void run() {
+        try {
+          final PsiFile targetPsiFile = findTargetFile(path);
+          final VirtualFile targetVirtualFile = targetPsiFile != null ? targetPsiFile.getVirtualFile() : null;
+          if (targetPsiFile != null && targetVirtualFile != null) {
+            final EditorFactory editorFactory = EditorFactory.getInstance();
+            final Project project = targetPsiFile.getProject();
+            final Document document = PsiDocumentManager.getInstance(project).getDocument(targetPsiFile);
+            if (document != null) {
+
+              final Editor editor = editorFactory.createEditor(document, project, targetVirtualFile, false);
+              editor.getCaretModel().moveToOffset(offset);
               CommandProcessor.getInstance().executeCommand(project, new Runnable() {
                 @Override
                 public void run() {
@@ -72,12 +75,13 @@ public class EmbeditorRequestHandler {
                     protected void completionFinished(int offset1,
                                                       int offset2,
                                                       CompletionProgressIndicator indicator,
-                                                      LookupElement[] items,
+                                                      @NotNull LookupElement[] items,
                                                       boolean hasModifiers) {
-                      super.completionFinished(offset1, offset2, indicator, items, hasModifiers);
+                      CompletionServiceImpl.setCompletionPhase(new CompletionPhase.ItemsCalculated(indicator));
                       variants.addAll(ContainerUtil.map(items, new Function<LookupElement, String>() {
+                        @NotNull
                         @Override
-                        public String fun(LookupElement lookupElement) {
+                        public String fun(@NotNull LookupElement lookupElement) {
                           return lookupElement.getLookupString();
                         }
                       }));
@@ -86,19 +90,16 @@ public class EmbeditorRequestHandler {
 
                   Editor completionEditor = InjectedLanguageUtil.getEditorForInjectedLanguageNoCommit(editor, targetPsiFile);
                   handler.invokeCompletion(project, completionEditor);
-                  int i = 0;
                 }
               }, null, null);
             }
-          });
-
-          return variants.toArray(new String[variants.size()]);
+          }
+        } catch (Exception e) {
+          LOG.error(e);
         }
       }
-    } catch (Exception e) {
-      LOG.error(e);
-    }
-    return ArrayUtil.EMPTY_STRING_ARRAY;
+    });
+    return variants.size() > 0 ? variants.toArray(new String[variants.size()]) : ArrayUtil.EMPTY_STRING_ARRAY;
   }
 
   @Nullable

@@ -1,7 +1,15 @@
 package org.jetbrains.plugins.embeditor;
 
+import com.intellij.codeInsight.completion.CodeCompletionHandlerBase;
+import com.intellij.codeInsight.completion.CompletionProgressIndicator;
+import com.intellij.codeInsight.completion.CompletionType;
+import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.command.CommandProcessor;
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.editor.Document;
+import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.editor.EditorFactory;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectLocator;
 import com.intellij.openapi.project.ProjectManager;
@@ -12,10 +20,14 @@ import com.intellij.openapi.vcs.ProjectLevelVcsManager;
 import com.intellij.openapi.vcs.VcsRoot;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
-import com.intellij.psi.PsiReference;
+import com.intellij.psi.impl.source.tree.injected.InjectedLanguageUtil;
 import com.intellij.util.ArrayUtil;
+import com.intellij.util.Function;
+import com.intellij.util.containers.ContainerUtil;
+import com.intellij.util.ui.UIUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -36,17 +48,55 @@ public class EmbeditorRequestHandler {
   @SuppressWarnings("UnusedDeclaration")
   public String[] getCompletionVariants(@NotNull String path, int offset) {
     LOG.debug("getCompletionVariants(" + path + ", " + offset);
-    PsiFile targetFile = findTargetFile(path);
-    if (targetFile != null) {
-      final PsiReference referenceAt = targetFile.findReferenceAt(offset);
-      if (referenceAt != null) {
-        final Collection<String> variants = newHashSet();
-        final Object[] referenceAtVariants = referenceAt.getVariants();
-        for (Object referenceAtVariant : referenceAtVariants) {
-          variants.add(referenceAt.toString());
+
+    try {
+      final PsiFile targetPsiFile = findTargetFile(path);
+      VirtualFile targetVirtualFile = targetPsiFile != null ? targetPsiFile.getVirtualFile() : null;
+      if (targetPsiFile != null && targetVirtualFile != null) {
+        EditorFactory editorFactory = EditorFactory.getInstance();
+        final Project project = targetPsiFile.getProject();
+        Document document = PsiDocumentManager.getInstance(project).getDocument(targetPsiFile);
+        if (document != null) {
+          final Editor editor = editorFactory.createEditor(document, project, targetVirtualFile, false);
+          editor.getCaretModel().moveToOffset(offset);
+          final Collection<String> variants = newHashSet();
+          UIUtil.invokeAndWaitIfNeeded(new Runnable() {
+            @Override
+            public void run() {
+              CommandProcessor.getInstance().executeCommand(project, new Runnable() {
+                @Override
+                public void run() {
+                  final CodeCompletionHandlerBase handler = new CodeCompletionHandlerBase(CompletionType.BASIC) {
+
+                    @Override
+                    protected void completionFinished(int offset1,
+                                                      int offset2,
+                                                      CompletionProgressIndicator indicator,
+                                                      LookupElement[] items,
+                                                      boolean hasModifiers) {
+                      super.completionFinished(offset1, offset2, indicator, items, hasModifiers);
+                      variants.addAll(ContainerUtil.map(items, new Function<LookupElement, String>() {
+                        @Override
+                        public String fun(LookupElement lookupElement) {
+                          return lookupElement.getLookupString();
+                        }
+                      }));
+                    }
+                  };
+
+                  Editor completionEditor = InjectedLanguageUtil.getEditorForInjectedLanguageNoCommit(editor, targetPsiFile);
+                  handler.invokeCompletion(project, completionEditor);
+                  int i = 0;
+                }
+              }, null, null);
+            }
+          });
+
+          return variants.toArray(new String[variants.size()]);
         }
-        return variants.toArray(new String[variants.size()]);
       }
+    } catch (Exception e) {
+      LOG.error(e);
     }
     return ArrayUtil.EMPTY_STRING_ARRAY;
   }

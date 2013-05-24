@@ -44,6 +44,7 @@ public class EmbeditorCompletionLookup extends LightweightHint {
   private final EmbeditorLookupCellRenderer myCellRenderer;
 
   private boolean myShown = false;
+  private Integer myPrefixLength;
 
   public EmbeditorCompletionLookup(Project project, final JBTerminal terminal) {
     super(new JPanel(new BorderLayout()));
@@ -58,7 +59,7 @@ public class EmbeditorCompletionLookup extends LightweightHint {
         if ((keyChar == KeyEvent.VK_ENTER || keyChar == KeyEvent.VK_TAB)) {
           LookupElement lookupElement = (LookupElement)myList.getSelectedValue();
           try {
-            terminal.getEmulator().sendString(lookupElement.getLookupString()); //TODO: handle prefix
+            terminal.getEmulator().sendString(lookupElement.getLookupString().substring(myPrefixLength));
           }
           catch (IOException e1) {
             e1.printStackTrace();  //TODO
@@ -139,6 +140,10 @@ public class EmbeditorCompletionLookup extends LightweightHint {
 
       myShown = true;
     }
+  }
+
+  public void setPrefixLength(Integer prefixLength) {
+    myPrefixLength = prefixLength;
   }
 
 

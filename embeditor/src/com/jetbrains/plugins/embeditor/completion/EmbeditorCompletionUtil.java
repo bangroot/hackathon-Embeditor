@@ -5,6 +5,8 @@ import com.intellij.codeInsight.completion.CompletionParameters;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
+import com.intellij.openapi.util.Pair;
+import com.intellij.openapi.util.Ref;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.plugins.embeditor.EmbeditorUtil;
 
@@ -20,16 +22,21 @@ public class EmbeditorCompletionUtil {
 
   @NotNull
   @SuppressWarnings("UnusedDeclaration")
-  public static LookupElement[] getCompletionVariants(@NotNull final String path, final String fileContent, final int line, final int column) {
+  public static Pair<LookupElement[], Integer> getCompletionVariants(@NotNull final String path,
+                                                                     final String fileContent,
+                                                                     final int line,
+                                                                     final int column) {
     LOG.debug("getCompletionVariants(" + path + ":" + line + ":" + column);
 
     final Collection<LookupElement> variants = newHashSet();
+    final Ref<Integer> result = Ref.create(null);
     EmbeditorUtil.performCompletion(path, fileContent, line, column, new EmbeditorUtil.CompletionCallback() {
       @Override
       public void completionFinished(CompletionParameters parameters, LookupElement[] items, Document document) {
         variants.addAll(Lists.newArrayList(items));
+        result.set(EmbeditorUtil.getCompletionPrefixLength(parameters));
       }
     });
-    return variants.toArray(new LookupElement[variants.size()]);
+    return Pair.create(variants.toArray(new LookupElement[variants.size()]), result.get());
   }
 }

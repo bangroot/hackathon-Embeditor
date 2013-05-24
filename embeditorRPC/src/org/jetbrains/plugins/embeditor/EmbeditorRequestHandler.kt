@@ -15,7 +15,7 @@ public class EmbeditorRequestHandler {
       override fun completionFinished(parameters: CompletionParameters,
                                       items: Array<out LookupElement>,
                                       document: Document) {
-        result = EmbeditorUtil.getCompletionPrefixLength(parameters, document)
+        result = EmbeditorUtil.getOffsetFromLineStart(parameters, document)
       }
     })
     return result

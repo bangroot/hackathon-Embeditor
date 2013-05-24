@@ -95,10 +95,11 @@ public class EmbeddedTerminalEditor extends JBTerminal {
     if (myVimInstance.canExecuteCompletion()) {
       Pair<Integer, Integer> cursor = myVimInstance.getCursorPosition();
 
-      LookupElement[] variants =
+      Pair<LookupElement[], Integer> variants =
         EmbeditorCompletionUtil.getCompletionVariants(myVimInstance.getFilePath(), null, cursor.first - 1, cursor.second);
 
-      myCompletionLookup.setVariants(Lists.newArrayList(variants));
+      myCompletionLookup.setVariants(Lists.newArrayList(variants.first));
+      myCompletionLookup.setPrefixLength(variants.second);
 
       if (!myCompletionLookup.isShown()) {
         myCompletionLookup.show(myEmbeddedEditorPanel);

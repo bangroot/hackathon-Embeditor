@@ -41,7 +41,11 @@ public final class EmbeditorUtil {
 
   private static final Key<SoftReference<Pair<PsiFile, Document>>> SYNC_FILE_COPY_KEY = Key.create("CompletionFileCopy");
 
-  public static int getCompletionPrefixLength(@NotNull CompletionParameters completionParameters, @NotNull Document document) {
+  public static int getCompletionPrefixLength(@NotNull CompletionParameters completionParameters) {
+    return completionParameters.getPosition().getTextLength() - CompletionInitializationContext.DUMMY_IDENTIFIER_TRIMMED.length();
+  }
+
+  public static int getOffsetFromLineStart(@NotNull CompletionParameters completionParameters, @NotNull Document document) {
     TextRange range = completionParameters.getPosition().getTextRange();
     if (range != null) {
       int offset = range.getStartOffset();
@@ -115,7 +119,7 @@ public final class EmbeditorUtil {
               if (pair != null && pair.first.getClass().equals(originalFile.getClass()) && isCopyUpToDate(pair.first, pair.second)) {
                 final PsiFile copy = pair.first;
                 if (copy.getViewProvider().getModificationStamp() > originalFile.getViewProvider().getModificationStamp()) {
-                  ((PsiModificationTrackerImpl) originalFile.getManager().getModificationTracker()).incCounter();
+                  ((PsiModificationTrackerImpl)originalFile.getManager().getModificationTracker()).incCounter();
                 }
                 final Document document = pair.second;
                 document.setText(newFileContent);
@@ -123,7 +127,7 @@ public final class EmbeditorUtil {
               }
             }
 
-            final PsiFile copy = (PsiFile) originalFile.copy();
+            final PsiFile copy = (PsiFile)originalFile.copy();
             final Document documentCopy = copy.getViewProvider().getDocument();
             if (documentCopy == null) {
               throw new IllegalStateException("Document copy can't be null");

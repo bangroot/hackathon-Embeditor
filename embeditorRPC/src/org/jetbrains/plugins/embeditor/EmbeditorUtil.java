@@ -34,7 +34,10 @@ import java.io.File;
  * User: zolotov
  * Date: 5/24/13
  */
-public class Util {
+public final class EmbeditorUtil {
+  private EmbeditorUtil() {
+  }
+
   private static final Key<SoftReference<Pair<PsiFile, Document>>> SYNC_FILE_COPY_KEY = Key.create("CompletionFileCopy");
 
   public static void performCompletion(@NotNull final String path, @NotNull final String fileContent, final int line, final int column, @NotNull final CompletionCallback completionCallback) {

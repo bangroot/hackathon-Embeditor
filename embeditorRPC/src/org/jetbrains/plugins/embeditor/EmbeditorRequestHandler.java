@@ -27,7 +27,7 @@ public class EmbeditorRequestHandler {
     LOG.debug("getStartCompletionOffset(" + path + ":" + line + ":" + column);
 
     final int[] result = {0};
-    Util.performCompletion(path, fileContent, line, column, new Util.CompletionCallback() {
+    EmbeditorUtil.performCompletion(path, fileContent, line, column, new EmbeditorUtil.CompletionCallback() {
       @Override
       public void completionFinished(CompletionParameters parameters, LookupElement[] items, Document document) {
         int offset = parameters.getPosition().getTextRange().getStartOffset();
@@ -45,7 +45,7 @@ public class EmbeditorRequestHandler {
     LOG.debug("getCompletionVariants(" + path + ":" + line + ":" + column);
 
     final Collection<String> variants = newHashSet();
-    Util.performCompletion(path, fileContent, line, column, new Util.CompletionCallback() {
+    EmbeditorUtil.performCompletion(path, fileContent, line, column, new EmbeditorUtil.CompletionCallback() {
       @Override
       public void completionFinished(CompletionParameters parameters, LookupElement[] items, Document document) {
         variants.addAll(ContainerUtil.map(items, new Function<LookupElement, String>() {

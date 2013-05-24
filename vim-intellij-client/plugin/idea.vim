@@ -6,7 +6,43 @@ if !has('python')
 	finish
 endif
 
-" COMPLETION
+" START RESOLVING
+function! idea#resolve()
+python << endpython
+import vim
+import xmlrpclib
+server=xmlrpclib.ServerProxy(vim.eval("s:IDEA_RPC_HOST") + ":" + vim.eval("s:IDEA_RPC_PORT"))
+# todo: col should consider tabwidth
+(row, col) = vim.current.window.cursor
+filepath = vim.eval("expand('%:p')")
+row = row - 1
+filecontent = '\n'.join(vim.current.buffer)
+result = server.embeditor.resolve(filepath, filecontent, row, col)
+
+# todo: replace with for and add popup
+if len(result) > 0: 
+    resolveResult = result[0]
+    targetFilePath = resolveResult["path"]
+    targetLine = resolveResult["line"] + 1
+    targetColumn = resolveResult["column"] + 1
+    # todo: add file existing checking
+    if filepath != targetFilePath:
+        vim.command(":e %s" % targetFilePath)
+    if len(vim.current.buffer) >= targetLine:
+        vim.current.window.cursor = (targetLine, 1)
+        if len(vim.current.buffer[targetLine - 1]) >= targetColumn:
+            vim.current.window.cursor = (targetLine, targetColumn)
+
+
+endpython
+endfunction
+
+" redefine C-] for DEMO
+nmap g] :call idea#resolve()<CR>
+" END RESOLVING
+
+
+" START COMPLETION
 function! idea#complete(findstart, base)
 python << endpython
 import vim
@@ -35,3 +71,4 @@ endpython
 endfunction
 
 set completefunc=idea#complete
+" END COMPLETION

@@ -4,7 +4,6 @@ import com.intellij.codeInsight.completion.CompletionParameters
 import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.Document
-import com.intellij.util.ArrayUtil
 
 val LOG = Logger.getInstance(javaClass<EmbeditorRequestHandler>())
 
@@ -37,6 +36,6 @@ public class EmbeditorRequestHandler {
         variants = items.map { it.getLookupString() }.toSet()
       }
     })
-    return variants.toArray(Array(variants.size, { "" }))
+    return variants.toArray(array<String>())
   }
 }

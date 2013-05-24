@@ -6,7 +6,9 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.Document
 import com.intellij.util.ArrayUtil
 
-public class EmbeditorRequestHandler() {
+val LOG = Logger.getInstance(javaClass<EmbeditorRequestHandler>())
+
+public class EmbeditorRequestHandler {
   public fun getStartCompletionOffset(path: String, fileContent: String, line: Int, column: Int): Int {
     LOG?.debug("getStartCompletionOffset(${path}:${line}:${column}")
     var result = 0
@@ -36,9 +38,5 @@ public class EmbeditorRequestHandler() {
       }
     })
     return variants.toArray(Array(variants.size, { "" }))
-  }
-
-  class object {
-    val LOG = Logger.getInstance(javaClass<EmbeditorRequestHandler>())
   }
 }

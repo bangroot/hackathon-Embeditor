@@ -12,6 +12,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectLocator;
 import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.util.Computable;
+import com.intellij.openapi.util.Key;
 import com.intellij.openapi.util.Pair;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.vcs.ProjectLevelVcsManager;
@@ -21,7 +22,8 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
-import com.intellij.psi.impl.source.tree.injected.InjectedLanguageUtil;
+import com.intellij.psi.impl.PsiModificationTrackerImpl;
+import com.intellij.reference.SoftReference;
 import com.intellij.util.ui.UIUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -33,7 +35,9 @@ import java.io.File;
  * Date: 5/24/13
  */
 public class Util {
-  public static void performCompletion(final String path, final String fileContent, final int line, final int column, final CompletionCallback completionCallback) {
+  private static final Key<SoftReference<Pair<PsiFile, Document>>> SYNC_FILE_COPY_KEY = Key.create("CompletionFileCopy");
+
+  public static void performCompletion(@NotNull final String path, @NotNull final String fileContent, final int line, final int column, @NotNull final CompletionCallback completionCallback) {
     UIUtil.invokeAndWaitIfNeeded(new Runnable() {
       @Override
       public void run() {
@@ -42,48 +46,84 @@ public class Util {
         if (targetPsiFile != null && targetVirtualFile != null) {
           final EditorFactory editorFactory = EditorFactory.getInstance();
           final Project project = targetPsiFile.getProject();
-          final Document document = PsiDocumentManager.getInstance(project).getDocument(targetPsiFile);
-          if (document != null) {
-            final CharSequence originalText = document.getCharsSequence();
-            setDocumentText(document, fileContent);
-            final Editor editor = editorFactory.createEditor(document, project, targetVirtualFile, false);
-            int offset = document.getLineStartOffset(line) + column;
-            editor.getCaretModel().moveToOffset(offset);
-            CommandProcessor.getInstance().executeCommand(project, new Runnable() {
-              @Override
-              public void run() {
-                final CodeCompletionHandlerBase handler = new CodeCompletionHandlerBase(CompletionType.BASIC) {
+          final Document originalDocument = PsiDocumentManager.getInstance(project).getDocument(targetPsiFile);
+          if (originalDocument != null) {
+            PsiFile fileCopy = createFileCopy(targetPsiFile, fileContent);
+            final Document document = fileCopy.getViewProvider().getDocument();
+            if (document != null) {
+              final Editor editor = editorFactory.createEditor(document, project, targetVirtualFile, false);
+              int offset = document.getLineStartOffset(line) + column;
+              editor.getCaretModel().moveToOffset(offset);
+              CommandProcessor.getInstance().executeCommand(project, new Runnable() {
+                @Override
+                public void run() {
+                  final CodeCompletionHandlerBase handler = new CodeCompletionHandlerBase(CompletionType.BASIC) {
 
-                  @Override
-                  protected void completionFinished(int offset1,
-                                                    int offset2,
-                                                    CompletionProgressIndicator indicator,
-                                                    @NotNull LookupElement[] items,
-                                                    boolean hasModifiers) {
-                    CompletionServiceImpl.setCompletionPhase(new CompletionPhase.ItemsCalculated(indicator));
-                    completionCallback.completionFinished(indicator.getParameters(), items, document);
-                  }
-                };
+                    @Override
+                    protected void completionFinished(int offset1,
+                                                      int offset2,
+                                                      @NotNull CompletionProgressIndicator indicator,
+                                                      @NotNull LookupElement[] items,
+                                                      boolean hasModifiers) {
+                      CompletionServiceImpl.setCompletionPhase(new CompletionPhase.ItemsCalculated(indicator));
+                      completionCallback.completionFinished(indicator.getParameters(), items, document);
+                    }
+                  };
 
-                Editor completionEditor = InjectedLanguageUtil.getEditorForInjectedLanguageNoCommit(editor, targetPsiFile);
-                handler.invokeCompletion(project, completionEditor);
-                setDocumentText(document, originalText);
-              }
-            }, null, null);
+                  handler.invokeCompletion(project, editor);
+                }
+              }, null, null);
+            }
           }
         }
       }
+    });
+  }
 
-      private void setDocumentText(final Document document, final CharSequence content) {
-        ApplicationManager.getApplication().runWriteAction(new Runnable() {
+  @NotNull
+  public static PsiFile createFileCopy(@NotNull final PsiFile originalFile, @NotNull final CharSequence newFileContent) {
+    final PsiFile[] fileCopy = {null};
+    CommandProcessor.getInstance().runUndoTransparentAction(new Runnable() {
+      @Override
+      public void run() {
+        fileCopy[0] = ApplicationManager.getApplication().runWriteAction(new Computable<PsiFile>() {
           @Override
-          public void run() {
-            document.setText(content);
+          public PsiFile compute() {
+            final SoftReference<Pair<PsiFile, Document>> reference = originalFile.getUserData(SYNC_FILE_COPY_KEY);
+            if (reference != null) {
+              final Pair<PsiFile, Document> pair = reference.get();
+              if (pair != null && pair.first.getClass().equals(originalFile.getClass()) && isCopyUpToDate(pair.first, pair.second)) {
+                final PsiFile copy = pair.first;
+                if (copy.getViewProvider().getModificationStamp() > originalFile.getViewProvider().getModificationStamp()) {
+                  ((PsiModificationTrackerImpl) originalFile.getManager().getModificationTracker()).incCounter();
+                }
+                final Document document = pair.second;
+                document.setText(newFileContent);
+                return copy;
+              }
+            }
 
+            final PsiFile copy = (PsiFile) originalFile.copy();
+            final Document documentCopy = copy.getViewProvider().getDocument();
+            if (documentCopy == null) {
+              throw new IllegalStateException("Document copy can't be null");
+            }
+            originalFile.putUserData(SYNC_FILE_COPY_KEY, new SoftReference<Pair<PsiFile, Document>>(Pair.create(copy, documentCopy)));
+            PsiDocumentManager.getInstance(originalFile.getProject()).commitDocument(documentCopy);
+            return copy;
           }
         });
       }
     });
+    return fileCopy[0];
+  }
+
+  private static boolean isCopyUpToDate(@NotNull PsiFile file, @NotNull Document document) {
+    if (!file.isValid()) {
+      return false;
+    }
+    PsiFile current = PsiDocumentManager.getInstance(file.getProject()).getPsiFile(document);
+    return current != null && current.getViewProvider().getPsi(file.getLanguage()) == file;
   }
 
   @Nullable

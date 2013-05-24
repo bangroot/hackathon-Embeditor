@@ -59,5 +59,4 @@ public class EmbeditorRequestHandler {
     });
     return variants.size() > 0 ? variants.toArray(new String[variants.size()]) : ArrayUtil.EMPTY_STRING_ARRAY;
   }
-
 }

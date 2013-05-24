@@ -40,7 +40,11 @@ public final class EmbeditorUtil {
 
   private static final Key<SoftReference<Pair<PsiFile, Document>>> SYNC_FILE_COPY_KEY = Key.create("CompletionFileCopy");
 
-  public static void performCompletion(@NotNull final String path, @NotNull final String fileContent, final int line, final int column, @NotNull final CompletionCallback completionCallback) {
+  public static void performCompletion(@NotNull final String path,
+                                       @Nullable final String fileContent,
+                                       final int line,
+                                       final int column,
+                                       @NotNull final CompletionCallback completionCallback) {
     UIUtil.invokeAndWaitIfNeeded(new Runnable() {
       @Override
       public void run() {
@@ -51,7 +55,9 @@ public final class EmbeditorUtil {
           final Project project = targetPsiFile.getProject();
           final Document originalDocument = PsiDocumentManager.getInstance(project).getDocument(targetPsiFile);
           if (originalDocument != null) {
-            PsiFile fileCopy = createFileCopy(targetPsiFile, fileContent);
+
+            PsiFile fileCopy =
+              fileContent != null ? createFileCopy(targetPsiFile, fileContent) : createFileCopy(targetPsiFile, originalDocument.getText());
             final Document document = fileCopy.getViewProvider().getDocument();
             if (document != null) {
               final Editor editor = editorFactory.createEditor(document, project, targetVirtualFile, false);
@@ -98,7 +104,7 @@ public final class EmbeditorUtil {
               if (pair != null && pair.first.getClass().equals(originalFile.getClass()) && isCopyUpToDate(pair.first, pair.second)) {
                 final PsiFile copy = pair.first;
                 if (copy.getViewProvider().getModificationStamp() > originalFile.getViewProvider().getModificationStamp()) {
-                  ((PsiModificationTrackerImpl) originalFile.getManager().getModificationTracker()).incCounter();
+                  ((PsiModificationTrackerImpl)originalFile.getManager().getModificationTracker()).incCounter();
                 }
                 final Document document = pair.second;
                 document.setText(newFileContent);
@@ -106,7 +112,7 @@ public final class EmbeditorUtil {
               }
             }
 
-            final PsiFile copy = (PsiFile) originalFile.copy();
+            final PsiFile copy = (PsiFile)originalFile.copy();
             final Document documentCopy = copy.getViewProvider().getDocument();
             if (documentCopy == null) {
               throw new IllegalStateException("Document copy can't be null");

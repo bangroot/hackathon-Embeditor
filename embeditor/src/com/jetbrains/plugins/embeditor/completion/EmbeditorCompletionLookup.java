@@ -1,18 +1,24 @@
-package com.jetbrains.plugins.embeditor;
+package com.jetbrains.plugins.embeditor.completion;
 
+import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.impl.CompletionExtender;
 import com.intellij.icons.AllIcons;
 import com.intellij.ide.ui.UISettings;
+import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.IdeFocusManager;
-import com.intellij.ui.*;
+import com.intellij.ui.CollectionListModel;
+import com.intellij.ui.ExpandableItemsHandler;
+import com.intellij.ui.HintHint;
+import com.intellij.ui.LightweightHint;
 import com.intellij.ui.components.JBLayeredPane;
 import com.intellij.ui.components.JBList;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.util.ui.AbstractLayoutManager;
 import com.intellij.util.ui.ButtonlessScrollBarUI;
-import com.jediterm.emulator.ui.SwingJediTerminal;
+import com.jetbrains.plugins.embeditor.EmbeddedEditorPanel;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.plugins.terminal.JBTerminal;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -35,12 +41,14 @@ public class EmbeditorCompletionLookup extends LightweightHint {
 
   private int myMaximumHeight = Integer.MAX_VALUE;
 
+  private final EmbeditorLookupCellRenderer myCellRenderer;
+
   private boolean myShown = false;
 
-  public EmbeditorCompletionLookup(final SwingJediTerminal terminal) {
+  public EmbeditorCompletionLookup(Project project, final JBTerminal terminal) {
     super(new JPanel(new BorderLayout()));
 
-    CollectionListModel<String> model = new CollectionListModel<String>();
+    CollectionListModel<LookupElement> model = new CollectionListModel<LookupElement>();
 
     myList = new JBList(model) {
       @Override
@@ -48,13 +56,14 @@ public class EmbeditorCompletionLookup extends LightweightHint {
         final char keyChar = e.getKeyChar();
 
         if ((keyChar == KeyEvent.VK_ENTER || keyChar == KeyEvent.VK_TAB)) {
-          String text = (String) myList.getSelectedValue();
+          LookupElement lookupElement = (LookupElement)myList.getSelectedValue();
           try {
-            terminal.getEmulator().sendString(text); //TODO: handle prefix
+            terminal.getEmulator().sendString(lookupElement.getLookupString()); //TODO: handle prefix
           }
           catch (IOException e1) {
             e1.printStackTrace();  //TODO
           }
+          doHide();
         }
 
         if (keyChar == KeyEvent.VK_ESCAPE) {
@@ -92,10 +101,13 @@ public class EmbeditorCompletionLookup extends LightweightHint {
 
     myLayeredPane.mainPanel.add(myScrollPane, BorderLayout.CENTER);
     myScrollPane.setBorder(null);
+
+    myCellRenderer = new EmbeditorLookupCellRenderer(this, terminal.getColorScheme());
+    myList.setCellRenderer(myCellRenderer);
   }
 
 
-  public void setVariants(List<String> variants) {
+  public void setVariants(List<LookupElement> variants) {
     getListModel().removeAll();
     getListModel().add(variants);
   }
@@ -109,35 +121,17 @@ public class EmbeditorCompletionLookup extends LightweightHint {
     return myShown;
   }
 
-  private CollectionListModel<String> getListModel() {
+  private CollectionListModel<LookupElement> getListModel() {
     //noinspection unchecked
-    return (CollectionListModel<String>)myList.getModel();
+    return (CollectionListModel<LookupElement>)myList.getModel();
   }
 
-  void show(EmbeddedEditorPanel panel) {
+  public void show(EmbeddedEditorPanel panel) {
     if (!myShown) {
       JLayeredPane layeredPane = panel.getRootPane().getLayeredPane();
       Point p = panel.getShowLookupPoint();
 
-      Dimension size = new Dimension(0, 0);
-
-      if (isRealPopup()) {
-        final Point editorCorner = panel.getLocation();
-        SwingUtilities.convertPointToScreen(editorCorner, layeredPane);
-        final Point point = new Point(p);
-        SwingUtilities.convertPointToScreen(point, layeredPane);
-        final Rectangle editorScreen = ScreenUtil.getScreenRectangle(point.x, point.y);
-
-        SwingUtilities.convertPointToScreen(p, layeredPane);
-        final Rectangle rectangle = new Rectangle(p, size);
-        ScreenUtil.moveToFit(rectangle, editorScreen, null);
-        p = rectangle.getLocation();
-        SwingUtilities.convertPointFromScreen(p, layeredPane);
-      }
-      else if (layeredPane.getWidth() < p.x + size.width) {
-        p.x = Math.max(0, layeredPane.getWidth() - size.width);
-      }
-
+      SwingUtilities.convertPointToScreen(p, panel);
 
       show(layeredPane, p.x, p.y, panel, new HintHint());
 

@@ -1,12 +1,15 @@
 package com.jetbrains.plugins.embeditor;
 
 import com.google.common.collect.Lists;
+import com.intellij.codeInsight.lookup.LookupElement;
+import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Pair;
 import com.jediterm.emulator.display.BackBuffer;
 import com.jediterm.emulator.display.LinesBuffer;
 import com.jediterm.emulator.display.StyleState;
 import com.jediterm.emulator.ui.SwingTerminalPanel;
-import org.jetbrains.plugins.embeditor.EmbeditorRequestHandler;
+import com.jetbrains.plugins.embeditor.completion.EmbeditorCompletionLookup;
+import com.jetbrains.plugins.embeditor.completion.EmbeditorCompletionUtil;
 import org.jetbrains.plugins.terminal.JBTerminal;
 
 import java.awt.event.InputEvent;
@@ -20,10 +23,12 @@ public class EmbeddedTerminalEditor extends JBTerminal {
 
   private EmbeddedEditorPanel myEmbeddedEditorPanel;
 
+  private Project myProject;
   private VimInstance myVimInstance;
   private final EmbeditorCompletionLookup myCompletionLookup;
 
-  public EmbeddedTerminalEditor(VimInstance instance) {
+  public EmbeddedTerminalEditor(Project project, VimInstance instance) {
+    myProject = project;
     myVimInstance = instance;
     new Thread(new Runnable() {
       @Override
@@ -39,7 +44,7 @@ public class EmbeddedTerminalEditor extends JBTerminal {
       }
     }).start();
 
-    myCompletionLookup = new EmbeditorCompletionLookup(this);
+    myCompletionLookup = new EmbeditorCompletionLookup(project, this);
   }
 
   @Override
@@ -90,9 +95,8 @@ public class EmbeddedTerminalEditor extends JBTerminal {
     if (myVimInstance.canExecuteCompletion()) {
       Pair<Integer, Integer> cursor = myVimInstance.getCursorPosition();
 
-      String[] variants = new EmbeditorRequestHandler().getCompletionVariants(myVimInstance.getFilePath(), cursor.first, cursor.second);
-
-      System.out.println(variants);
+      LookupElement[] variants =
+        EmbeditorCompletionUtil.getCompletionVariants(myVimInstance.getFilePath(), null, cursor.first - 1, cursor.second);
 
       myCompletionLookup.setVariants(Lists.newArrayList(variants));
 

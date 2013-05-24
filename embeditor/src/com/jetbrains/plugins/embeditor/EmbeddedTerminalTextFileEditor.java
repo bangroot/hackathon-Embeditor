@@ -57,7 +57,7 @@ public class EmbeddedTerminalTextFileEditor extends UserDataHolderBase implement
 
       myVimInstance = new VimInstance(vFile, process, ports[0]);
 
-      final EmbeddedTerminalEditor terminal = new EmbeddedTerminalEditor(myVimInstance);
+      final EmbeddedTerminalEditor terminal = new EmbeddedTerminalEditor(myProject, myVimInstance);
 
       terminal.setTtyConnector(createTtyConnector(process));
 

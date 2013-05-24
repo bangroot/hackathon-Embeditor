@@ -13,16 +13,17 @@ import com.intellij.openapi.util.UserDataHolderBase;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.pom.Navigatable;
 import com.intellij.util.ArrayUtil;
+import com.intellij.util.net.NetUtils;
 import com.intellij.util.ui.UIUtil;
 import com.jediterm.emulator.TtyConnector;
 import com.jediterm.pty.PtyProcess;
 import com.jediterm.pty.PtyProcessTtyConnector;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.jetbrains.plugins.terminal.JBTerminal;
 
 import javax.swing.*;
 import java.beans.PropertyChangeListener;
+import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Map;
 
@@ -37,49 +38,62 @@ public class EmbeddedTerminalTextFileEditor extends UserDataHolderBase implement
 
   private JComponent myEditorPanel;
 
+  private VimInstance myVimInstance;
+
   public EmbeddedTerminalTextFileEditor(Project project, VirtualFile vFile) {
     myProject = project;
 
     myFile = vFile;
 
-    final JBTerminal terminal = new JBTerminal();
-
     Map<String, String> env = Maps.newHashMap(System.getenv());
     env.put("TERM", "vt100");
 
-    final PtyProcess process = new PtyProcess("/usr/bin/vim", new String[]{"/usr/bin/vim", vFile.getPath()}, env);
+    try {
+      int[] ports = NetUtils.findAvailableSocketPorts(2);
+      env.put("VIM_RPC_PORT", Integer.toString(ports[0]));
 
-    terminal.setTtyConnector(createTtyConnector(process));
 
-    myEditor = createEditor(project, vFile);
+      final PtyProcess process = new PtyProcess("/usr/bin/vim", new String[]{"/usr/bin/vim", vFile.getPath()}, env);
 
-    myEditorPanel = terminal.getTermPanel();
+      myVimInstance = new VimInstance(vFile, process, ports[0]);
 
-    terminal.start();
+      final EmbeddedTerminalEditor terminal = new EmbeddedTerminalEditor(myVimInstance);
 
-    new Thread(new Runnable() {
+      terminal.setTtyConnector(createTtyConnector(process));
 
-      @Override
-      public void run() {
-        while (!process.isFinished()) {
-          try {
-            process.waitFor();
-          }
-          catch (InterruptedException e) {
+      myEditor = createEditor(project, vFile);
 
-          }
-        }
+      myEditorPanel = terminal.getTerminalPanel();
 
-        if (process.isFinished()) {
-          UIUtil.invokeLaterIfNeeded(new Runnable() {
-            @Override
-            public void run() {
-              close();
+      terminal.start();
+
+      new Thread(new Runnable() {
+
+        @Override
+        public void run() {
+          while (!process.isFinished()) {
+            try {
+              process.waitFor();
             }
-          });
+            catch (InterruptedException e) {
+
+            }
+          }
+
+          if (process.isFinished()) {
+            UIUtil.invokeLaterIfNeeded(new Runnable() {
+              @Override
+              public void run() {
+                close();
+              }
+            });
+          }
         }
-      }
-    }).start();
+      }).start();
+    }
+    catch (IOException e) {
+      e.printStackTrace();
+    }
   }
 
 

@@ -11,8 +11,11 @@
     <orderEntry type="module" module-name="platform-api" />
     <orderEntry type="module" module-name="platform-impl" />
     <orderEntry type="module" module-name="terminal" />
-    <orderEntry type="library" name="jediterm-pty" level="project" />
     <orderEntry type="library" name="Guava" level="project" />
+    <orderEntry type="module" module-name="jediterm" />
+    <orderEntry type="library" name="XmlRPC" level="project" />
+    <orderEntry type="module" module-name="embeditorRPC" />
+    <orderEntry type="module" module-name="lang-impl" />
   </component>
 </module>
 

@@ -15,7 +15,10 @@ def save_file():
    pass #TODO
 
 def can_complete():
-   return True #TODO
+   if 'i' == vim.eval('mode()'):
+   	return True
+   else:
+        return False
 
 def get_cursor():
    return vim.current.window.cursor

@@ -31,6 +31,6 @@ public class EmbeditorRequestHandler {
         variants = items.map { it.getLookupString() }.toSet()
       }
     })
-    return variants.toArray(Array(variants.size, { "" }))
+    return variants.toArray(array<String>())
   }
 }

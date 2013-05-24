@@ -8,6 +8,9 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="module" module-name="lang-impl" />
+    <orderEntry type="module" module-name="vcs-api" />
+    <orderEntry type="library" name="Guava" level="project" />
   </component>
 </module>
 

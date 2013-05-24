@@ -45,6 +45,8 @@ public class EmbeddedTerminalEditor extends JBTerminal {
     }).start();
 
     myCompletionLookup = new EmbeditorCompletionLookup(project, this);
+
+
   }
 
   @Override
@@ -95,8 +97,10 @@ public class EmbeddedTerminalEditor extends JBTerminal {
     if (myVimInstance.canExecuteCompletion()) {
       Pair<Integer, Integer> cursor = myVimInstance.getCursorPosition();
 
+      String content = myVimInstance.getContent();
+
       Pair<LookupElement[], Integer> variants =
-        EmbeditorCompletionUtil.getCompletionVariants(myVimInstance.getFilePath(), null, cursor.first - 1, cursor.second);
+        EmbeditorCompletionUtil.getCompletionVariants(myVimInstance.getFilePath(), content, cursor.first - 1, cursor.second);
 
       myCompletionLookup.setVariants(Lists.newArrayList(variants.first));
       myCompletionLookup.setPrefixLength(variants.second);

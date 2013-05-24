@@ -22,9 +22,12 @@ import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiFileFactory;
 import com.intellij.psi.PsiManager;
+import com.intellij.psi.impl.PsiFileFactoryImpl;
 import com.intellij.psi.impl.PsiModificationTrackerImpl;
 import com.intellij.reference.SoftReference;
+import com.intellij.testFramework.LightVirtualFile;
 import com.intellij.util.ui.UIUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -72,7 +75,9 @@ public final class EmbeditorUtil {
           if (originalDocument != null) {
 
             PsiFile fileCopy =
-              fileContent != null ? createFileCopy(targetPsiFile, fileContent) : createFileCopy(targetPsiFile, originalDocument.getText());
+              fileContent != null
+              ? createDummyFile(project, fileContent, targetPsiFile)
+              : createFileCopy(targetPsiFile, originalDocument.getText());
             final Document document = fileCopy.getViewProvider().getDocument();
             if (document != null) {
               final Editor editor = editorFactory.createEditor(document, project, targetVirtualFile, false);
@@ -104,6 +109,15 @@ public final class EmbeditorUtil {
     });
   }
 
+  public static PsiFile createDummyFile(Project project, String contents, PsiFile original) {
+    final PsiFileFactory factory = PsiFileFactory.getInstance(project);
+    final LightVirtualFile virtualFile = new LightVirtualFile(original.getName(), original.getFileType(), contents);
+
+    final PsiFile psiFile = ((PsiFileFactoryImpl)factory).trySetupPsiForFile(virtualFile, original.getLanguage(), false, true);
+    assert psiFile != null;
+    return psiFile;
+  }
+
   private static int lineAndColumntToOffset(Document document, int line, int column) {
     return document.getLineStartOffset(line) + column;
   }
@@ -117,7 +131,8 @@ public final class EmbeditorUtil {
         fileCopy[0] = ApplicationManager.getApplication().runWriteAction(new Computable<PsiFile>() {
           @Override
           public PsiFile compute() {
-            final SoftReference<Pair<PsiFile, Document>> reference = originalFile.getUserData(SYNC_FILE_COPY_KEY);
+            //final SoftReference<Pair<PsiFile, Document>> reference = originalFile.getUserData(SYNC_FILE_COPY_KEY);
+            final SoftReference<Pair<PsiFile, Document>> reference = null;
             if (reference != null) {
               final Pair<PsiFile, Document> pair = reference.get();
               if (pair != null && pair.first.getClass().equals(originalFile.getClass()) && isCopyUpToDate(pair.first, pair.second)) {

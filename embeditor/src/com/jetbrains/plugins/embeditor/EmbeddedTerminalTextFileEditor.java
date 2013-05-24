@@ -91,6 +91,8 @@ public class EmbeddedTerminalTextFileEditor extends UserDataHolderBase implement
           }
         }
       }).start();
+
+      //FileEditorManagerImpl.getInstance(myProject).addFileEditorManagerListener(); TODO: quick vim on tab close
     }
     catch (IOException e) {
       e.printStackTrace();

@@ -11,6 +11,10 @@ from SimpleXMLRPCServer import SimpleXMLRPCServer
 import threading
 import os
 
+def get_content():
+   filecontent = '\n'.join(vim.current.buffer)
+   return filecontent
+
 def save_file():
    pass #TODO
 
@@ -32,6 +36,7 @@ def start_server(host, port):
     server.register_function(get_cursor)
     server.register_function(save_file)
     server.register_function(can_complete)
+    server.register_function(get_content)
     server.serve_forever()
 
 p = os.getenv('VIM_RPC_PORT')

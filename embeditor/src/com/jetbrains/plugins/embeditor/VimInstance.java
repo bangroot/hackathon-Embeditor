@@ -49,4 +49,17 @@ public class VimInstance {
   public String getFilePath() {
     return myVFile.getPath();
   }
+
+  public String getContent() {
+    try {
+      Object o = myClient.execute("get_content", new Object[0]);
+
+      return (String) o;
+    }
+    catch (Exception e) {
+      e.printStackTrace();
+    }
+
+    return null;
+  }
 }

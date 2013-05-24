@@ -13,13 +13,19 @@ import xmlrpclib
 server=xmlrpclib.ServerProxy(vim.eval("s:IDEA_RPC_HOST") + ":" + vim.eval("s:IDEA_RPC_PORT"))
 # todo: col should consider tabwidth
 (row, col) = vim.current.window.cursor
+basestring = vim.eval("a:base")
 filepath = vim.eval("expand('%:p')")
+row = row - 1
+
+firstlines = vim.current.buffer[:row]
+currentline = vim.current.buffer[row][:col] + basestring + vim.current.buffer[row][col:]
+lastlines = vim.current.buffer[row+1:]
+filecontent = '\n'.join(firstlines) + '\n' + currentline + '\n' + '\n'.join(lastlines)
 
 if vim.eval("a:findstart") == '1':
-    result = server.embeditor.getStartCompletionOffset(filepath, row - 1, col)
+    result = server.embeditor.getStartCompletionOffset(filepath, filecontent, row, col)
 else:
-    # todo: send whole file to server
-    result = server.embeditor.getCompletionVariants(filepath, row - 1, col)
+    result = server.embeditor.getCompletionVariants(filepath, filecontent, row, col)
 
 vim.command("let result=%s" % result)
 # todo: error handling

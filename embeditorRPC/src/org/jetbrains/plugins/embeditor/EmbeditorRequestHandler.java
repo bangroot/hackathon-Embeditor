@@ -45,11 +45,11 @@ public class EmbeditorRequestHandler {
   // todo: could be optimized, we should not perform full completion cycle in order to retrieve start offset
   // XML-RPC interface method - keep the signature intact
   @SuppressWarnings("UnusedDeclaration")
-  public int getStartCompletionOffset(@NotNull final String path, final int line, final int column) {
+  public int getStartCompletionOffset(@NotNull final String path, final String fileContent, final int line, final int column) {
     LOG.debug("getStartCompletionOffset(" + path + ":" + line + ":" + column);
 
     final int[] result = {0};
-    performCompletion(path, line, column, new CompletionCallback() {
+    performCompletion(path, fileContent, line, column, new CompletionCallback() {
       @Override
       public void completionFinished(CompletionParameters parameters, LookupElement[] items, Document document) {
         int offset = parameters.getPosition().getTextRange().getStartOffset();
@@ -63,12 +63,12 @@ public class EmbeditorRequestHandler {
   // XML-RPC interface method - keep the signature intact
   @NotNull
   @SuppressWarnings("UnusedDeclaration")
-  public String[] getCompletionVariants(@NotNull final String path, final int line, final int column) {
+  public String[] getCompletionVariants(@NotNull final String path, final String fileContent, final int line, final int column) {
     LOG.debug("getCompletionVariants(" + path + ":" + line + ":" + column);
 
     final Collection<String> variants = newHashSet();
 
-    performCompletion(path, line, column, new CompletionCallback() {
+    performCompletion(path, fileContent, line, column, new CompletionCallback() {
       @Override
       public void completionFinished(CompletionParameters parameters, LookupElement[] items, Document document) {
         variants.addAll(ContainerUtil.map(items, new Function<LookupElement, String>() {
@@ -83,7 +83,7 @@ public class EmbeditorRequestHandler {
     return variants.size() > 0 ? variants.toArray(new String[variants.size()]) : ArrayUtil.EMPTY_STRING_ARRAY;
   }
 
-  private void performCompletion(final String path, final int line, final int column, final CompletionCallback completionCallback) {
+  private void performCompletion(final String path, final String fileContent, final int line, final int column, final CompletionCallback completionCallback) {
     UIUtil.invokeAndWaitIfNeeded(new Runnable() {
       @Override
       public void run() {
@@ -95,7 +95,8 @@ public class EmbeditorRequestHandler {
             final Project project = targetPsiFile.getProject();
             final Document document = PsiDocumentManager.getInstance(project).getDocument(targetPsiFile);
             if (document != null) {
-
+              final CharSequence originalText = document.getCharsSequence();
+              setDocumentText(document, fileContent);
               final Editor editor = editorFactory.createEditor(document, project, targetVirtualFile, false);
               int offset = document.getLineStartOffset(line) + column;
               editor.getCaretModel().moveToOffset(offset);
@@ -117,6 +118,7 @@ public class EmbeditorRequestHandler {
 
                   Editor completionEditor = InjectedLanguageUtil.getEditorForInjectedLanguageNoCommit(editor, targetPsiFile);
                   handler.invokeCompletion(project, completionEditor);
+                  setDocumentText(document, originalText);
                 }
               }, null, null);
             }
@@ -124,6 +126,16 @@ public class EmbeditorRequestHandler {
         } catch (Exception e) {
           LOG.error(e);
         }
+      }
+
+      private void setDocumentText(final Document document, final CharSequence content) {
+        ApplicationManager.getApplication().runWriteAction(new Runnable() {
+          @Override
+          public void run() {
+            document.setText(content);
+
+          }
+        });
       }
     });
   }

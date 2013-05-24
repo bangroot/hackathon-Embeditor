@@ -14,6 +14,7 @@ import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.util.Computable;
 import com.intellij.openapi.util.Key;
 import com.intellij.openapi.util.Pair;
+import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.vcs.ProjectLevelVcsManager;
 import com.intellij.openapi.vcs.VcsRoot;
@@ -39,6 +40,16 @@ public final class EmbeditorUtil {
   }
 
   private static final Key<SoftReference<Pair<PsiFile, Document>>> SYNC_FILE_COPY_KEY = Key.create("CompletionFileCopy");
+
+  public static int getCompletionPrefixLength(@NotNull CompletionParameters completionParameters, @NotNull Document document) {
+    TextRange range = completionParameters.getPosition().getTextRange();
+    if (range != null) {
+      int offset = range.getStartOffset();
+      int lineNumber = document.getLineNumber(offset);
+      return offset - document.getLineStartOffset(lineNumber);
+    }
+    return 0;
+  }
 
   public static void performCompletion(@NotNull final String path, @NotNull final String fileContent, final int line, final int column, @NotNull final CompletionCallback completionCallback) {
     UIUtil.invokeAndWaitIfNeeded(new Runnable() {

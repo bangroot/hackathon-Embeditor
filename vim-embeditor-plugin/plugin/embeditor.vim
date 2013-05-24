@@ -27,6 +27,10 @@ def can_complete():
 def get_cursor():
    return vim.current.window.cursor
 
+def navigate(row, column):
+   print(row)
+   print(column)
+   
 def start_server(host, port):
     try:
         server = SimpleXMLRPCServer((host, port), logRequests=False)
@@ -37,6 +41,8 @@ def start_server(host, port):
     server.register_function(save_file)
     server.register_function(can_complete)
     server.register_function(get_content)
+    server.register_function(navigate)
+
     server.serve_forever()
 
 p = os.getenv('VIM_RPC_PORT')

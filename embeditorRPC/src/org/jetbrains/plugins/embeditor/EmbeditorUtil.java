@@ -198,6 +198,8 @@ public final class EmbeditorUtil {
   }
 
   public static interface CompletionCallback {
-    void completionFinished(CompletionParameters parameters, LookupElement[] items, Document document);
+    void completionFinished(@NotNull CompletionParameters parameters,
+                            @NotNull LookupElement[] items,
+                            @NotNull Document document);
   }
 }

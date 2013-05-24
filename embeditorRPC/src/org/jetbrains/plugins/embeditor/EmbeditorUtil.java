@@ -77,7 +77,7 @@ public final class EmbeditorUtil {
             PsiFile fileCopy =
               fileContent != null
               ? createDummyFile(project, fileContent, targetPsiFile)
-              : createFileCopy(targetPsiFile, originalDocument.getText());
+              : createFileCopy(targetPsiFile, originalDocument.getText()); //todo: delete and check
             final Document document = fileCopy.getViewProvider().getDocument();
             if (document != null) {
               final Editor editor = editorFactory.createEditor(document, project, targetVirtualFile, false);

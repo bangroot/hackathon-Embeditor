@@ -24,6 +24,15 @@ public class EmbeditorRequestHandler {
     return result
   }
 
+  public fun resolve(path: String, fileContent: String, line: Int, column: Int): Array<Hashtable<Any?, Any?>> {
+    LOG?.debug("resolve(${path}:${line}:${column}")
+    val result = Hashtable<Any?, Any?>()
+    result.put("path", path);
+    result.put("line", Integer.valueOf(5));
+    result.put("column", Integer.valueOf(10));
+    return array(result);
+  }
+
   public fun getCompletionVariants(path: String, fileContent: String, line: Int, column: Int): Array<String> {
     LOG?.debug("getCompletionVariants(${path}:${line}:${column}")
     var variants: Set<String> = setOf()

@@ -33,6 +33,7 @@ import java.util.Map;
 public class EmbeddedTerminalTextFileEditor extends UserDataHolderBase implements FileEditor, TextEditor {
   private final Project myProject;
   private final VirtualFile myFile;
+  private final String myCommand = "/usr/bin/vim";
 
   private TextEditor myEditor;
 
@@ -46,18 +47,18 @@ public class EmbeddedTerminalTextFileEditor extends UserDataHolderBase implement
     myFile = vFile;
 
     Map<String, String> env = Maps.newHashMap(System.getenv());
-    env.put("TERM", "vt100");
+    env.put("TERM", "xterm");
 
     try {
       int[] ports = NetUtils.findAvailableSocketPorts(2);
       env.put("VIM_RPC_PORT", Integer.toString(ports[0]));
 
 
-      final PtyProcess process = new PtyProcess("/usr/bin/vim", new String[]{"/usr/bin/vim", vFile.getPath()}, env);
+      final PtyProcess process = new PtyProcess(myCommand, new String[]{myCommand, vFile.getPath()}, env);
 
       myVimInstance = new VimInstance(vFile, process, ports[0]);
 
-      final EmbeddedTerminalEditor terminal = new EmbeddedTerminalEditor(myVimInstance);
+      final EmbeddedTerminalEditor terminal = new EmbeddedTerminalEditor(myProject, myVimInstance);
 
       terminal.setTtyConnector(createTtyConnector(process));
 
@@ -90,6 +91,8 @@ public class EmbeddedTerminalTextFileEditor extends UserDataHolderBase implement
           }
         }
       }).start();
+
+      //FileEditorManagerImpl.getInstance(myProject).addFileEditorManagerListener(); TODO: quick vim on tab close
     }
     catch (IOException e) {
       e.printStackTrace();
@@ -119,7 +122,7 @@ public class EmbeddedTerminalTextFileEditor extends UserDataHolderBase implement
   @NotNull
   @Override
   public String getName() {
-    return "";
+    return myCommand;
   }
 
   @NotNull

@@ -22,9 +22,12 @@ import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiFileFactory;
 import com.intellij.psi.PsiManager;
+import com.intellij.psi.impl.PsiFileFactoryImpl;
 import com.intellij.psi.impl.PsiModificationTrackerImpl;
 import com.intellij.reference.SoftReference;
+import com.intellij.testFramework.LightVirtualFile;
 import com.intellij.util.ui.UIUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -41,7 +44,11 @@ public final class EmbeditorUtil {
 
   private static final Key<SoftReference<Pair<PsiFile, Document>>> SYNC_FILE_COPY_KEY = Key.create("CompletionFileCopy");
 
-  public static int getCompletionPrefixLength(@NotNull CompletionParameters completionParameters, @NotNull Document document) {
+  public static int getCompletionPrefixLength(@NotNull CompletionParameters completionParameters) {
+    return completionParameters.getPosition().getTextLength() - CompletionInitializationContext.DUMMY_IDENTIFIER_TRIMMED.length();
+  }
+
+  public static int getOffsetFromLineStart(@NotNull CompletionParameters completionParameters, @NotNull Document document) {
     TextRange range = completionParameters.getPosition().getTextRange();
     if (range != null) {
       int offset = range.getStartOffset();
@@ -51,7 +58,11 @@ public final class EmbeditorUtil {
     return 0;
   }
 
-  public static void performCompletion(@NotNull final String path, @NotNull final String fileContent, final int line, final int column, @NotNull final CompletionCallback completionCallback) {
+  public static void performCompletion(@NotNull final String path,
+                                       @Nullable final String fileContent,
+                                       final int line,
+                                       final int column,
+                                       @NotNull final CompletionCallback completionCallback) {
     UIUtil.invokeAndWaitIfNeeded(new Runnable() {
       @Override
       public void run() {
@@ -62,11 +73,15 @@ public final class EmbeditorUtil {
           final Project project = targetPsiFile.getProject();
           final Document originalDocument = PsiDocumentManager.getInstance(project).getDocument(targetPsiFile);
           if (originalDocument != null) {
-            PsiFile fileCopy = createFileCopy(targetPsiFile, fileContent);
+
+            PsiFile fileCopy =
+              fileContent != null
+              ? createDummyFile(project, fileContent, targetPsiFile)
+              : createFileCopy(targetPsiFile, originalDocument.getText());
             final Document document = fileCopy.getViewProvider().getDocument();
             if (document != null) {
               final Editor editor = editorFactory.createEditor(document, project, targetVirtualFile, false);
-              int offset = document.getLineStartOffset(line) + column;
+              int offset = lineAndColumntToOffset(document, line, column);
               editor.getCaretModel().moveToOffset(offset);
               CommandProcessor.getInstance().executeCommand(project, new Runnable() {
                 @Override
@@ -94,6 +109,19 @@ public final class EmbeditorUtil {
     });
   }
 
+  public static PsiFile createDummyFile(Project project, String contents, PsiFile original) {
+    final PsiFileFactory factory = PsiFileFactory.getInstance(project);
+    final LightVirtualFile virtualFile = new LightVirtualFile(original.getName(), original.getFileType(), contents);
+
+    final PsiFile psiFile = ((PsiFileFactoryImpl)factory).trySetupPsiForFile(virtualFile, original.getLanguage(), false, true);
+    assert psiFile != null;
+    return psiFile;
+  }
+
+  private static int lineAndColumntToOffset(Document document, int line, int column) {
+    return document.getLineStartOffset(line) + column;
+  }
+
   @NotNull
   public static PsiFile createFileCopy(@NotNull final PsiFile originalFile, @NotNull final CharSequence newFileContent) {
     final PsiFile[] fileCopy = {null};
@@ -103,13 +131,14 @@ public final class EmbeditorUtil {
         fileCopy[0] = ApplicationManager.getApplication().runWriteAction(new Computable<PsiFile>() {
           @Override
           public PsiFile compute() {
-            final SoftReference<Pair<PsiFile, Document>> reference = originalFile.getUserData(SYNC_FILE_COPY_KEY);
+            //final SoftReference<Pair<PsiFile, Document>> reference = originalFile.getUserData(SYNC_FILE_COPY_KEY);
+            final SoftReference<Pair<PsiFile, Document>> reference = null;
             if (reference != null) {
               final Pair<PsiFile, Document> pair = reference.get();
               if (pair != null && pair.first.getClass().equals(originalFile.getClass()) && isCopyUpToDate(pair.first, pair.second)) {
                 final PsiFile copy = pair.first;
                 if (copy.getViewProvider().getModificationStamp() > originalFile.getViewProvider().getModificationStamp()) {
-                  ((PsiModificationTrackerImpl) originalFile.getManager().getModificationTracker()).incCounter();
+                  ((PsiModificationTrackerImpl)originalFile.getManager().getModificationTracker()).incCounter();
                 }
                 final Document document = pair.second;
                 document.setText(newFileContent);
@@ -117,7 +146,7 @@ public final class EmbeditorUtil {
               }
             }
 
-            final PsiFile copy = (PsiFile) originalFile.copy();
+            final PsiFile copy = (PsiFile)originalFile.copy();
             final Document documentCopy = copy.getViewProvider().getDocument();
             if (documentCopy == null) {
               throw new IllegalStateException("Document copy can't be null");

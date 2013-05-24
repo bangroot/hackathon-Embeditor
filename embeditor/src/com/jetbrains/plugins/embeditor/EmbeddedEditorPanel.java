@@ -30,8 +30,8 @@ public class EmbeddedEditorPanel extends JBTerminalPanel {
   }
 
   public Point getShowLookupPoint() {
-    int x = (getTerminalCursor().getX()+1)*myCharSize.width;
-    int y = (getTerminalCursor().getY()+1)*myCharSize.height;
+    int x = (getTerminalCursor().getCoordX())*myCharSize.width;
+    int y = (getTerminalCursor().getCoordY()-1)*myCharSize.height;
 
     return new Point(x, y);
   }

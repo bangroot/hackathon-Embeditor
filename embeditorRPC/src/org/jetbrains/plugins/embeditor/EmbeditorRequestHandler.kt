@@ -9,7 +9,7 @@ val LOG = Logger.getInstance(javaClass<EmbeditorRequestHandler>())
 
 public class EmbeditorRequestHandler {
   public fun getCompletionPrefixLength(path: String, fileContent: String, line: Int, column: Int): Int {
-    LOG?.debug("getCompletionPrefixLength(${path}:${line}:${column}")
+    LOG?.debug("getCompletionStartOffsetInLine(${path}:${line}:${column}")
     var result = 0
     EmbeditorUtil.performCompletion(path, fileContent, line, column, object: EmbeditorUtil.CompletionCallback {
       override fun completionFinished(parameters: CompletionParameters,

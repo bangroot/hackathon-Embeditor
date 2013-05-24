@@ -24,7 +24,7 @@ lastlines = vim.current.buffer[row+1:]
 filecontent = '\n'.join(firstlines) + '\n' + currentline + '\n' + '\n'.join(lastlines)
 
 if vim.eval("a:findstart") == '1':
-    result = server.embeditor.getCompletionPrefixLength(filepath, filecontent, row, col)
+    result = server.embeditor.getCompletionStartOffsetInLine(filepath, filecontent, row, col)
 else:
     result = server.embeditor.getCompletionVariants(filepath, filecontent, row, col)
 

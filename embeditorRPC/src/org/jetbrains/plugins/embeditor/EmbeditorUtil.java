@@ -11,19 +11,13 @@ import com.intellij.openapi.editor.EditorFactory;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectLocator;
 import com.intellij.openapi.project.ProjectManager;
-import com.intellij.openapi.util.Computable;
-import com.intellij.openapi.util.Key;
-import com.intellij.openapi.util.Pair;
-import com.intellij.openapi.util.TextRange;
+import com.intellij.openapi.util.*;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.vcs.ProjectLevelVcsManager;
 import com.intellij.openapi.vcs.VcsRoot;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.psi.PsiDocumentManager;
-import com.intellij.psi.PsiFile;
-import com.intellij.psi.PsiFileFactory;
-import com.intellij.psi.PsiManager;
+import com.intellij.psi.*;
 import com.intellij.psi.impl.PsiFileFactoryImpl;
 import com.intellij.psi.impl.PsiModificationTrackerImpl;
 import com.intellij.reference.SoftReference;
@@ -56,6 +50,62 @@ public final class EmbeditorUtil {
       return offset - document.getLineStartOffset(lineNumber);
     }
     return 0;
+  }
+
+  @NotNull
+  public static ResolveOutcome getResolveOutcome(@NotNull final String path,
+                                                 @NotNull final String fileContent,
+                                                 final int line,
+                                                 final int column) {
+    PsiElement el = performResolve(path, fileContent, line, column);
+    if (el != null) {
+      PsiFile resolveToFile = el.getContainingFile();
+      if (resolveToFile != null) {
+        String resolveToPath = resolveToFile.getOriginalFile().getVirtualFile().getPath();
+        Document doc = PsiDocumentManager.getInstance(el.getProject()).getDocument(resolveToFile);
+
+        int offset = el.getTextOffset();
+        int resolveToRow = doc.getLineNumber(offset);
+        int resolveToColumn = offset - doc.getLineStartOffset(offset);
+        return new ResolveOutcome(resolveToPath, resolveToRow, resolveToColumn);
+      }
+    }
+
+    return ResolveOutcome.NULL;
+  }
+
+  public static PsiElement performResolve(@NotNull final String path, @NotNull final String fileContent, final int line, final int column) {
+    final Ref<PsiElement> ref = Ref.create();
+    UIUtil.invokeAndWaitIfNeeded(new Runnable() {
+      @Override
+      public void run() {
+        final PsiFile targetPsiFile = findTargetFile(path);
+        final VirtualFile targetVirtualFile = targetPsiFile != null ? targetPsiFile.getVirtualFile() : null;
+        if (targetPsiFile != null && targetVirtualFile != null) {
+          final EditorFactory editorFactory = EditorFactory.getInstance();
+          final Project project = targetPsiFile.getProject();
+          final Document originalDocument = PsiDocumentManager.getInstance(project).getDocument(targetPsiFile);
+          if (originalDocument != null) {
+
+            PsiFile fileCopy =
+              fileContent != null
+              ? createDummyFile(project, fileContent, targetPsiFile)
+              : createFileCopy(targetPsiFile, originalDocument.getText()); //todo: delete and check
+            final Document document = fileCopy.getViewProvider().getDocument();
+            if (document != null) {
+              final Editor editor = editorFactory.createEditor(document, project, targetVirtualFile, false);
+              int offset = lineAndColumntToOffset(document, line, column);
+
+              PsiReference reference = fileCopy.findReferenceAt(offset);
+
+              ref.set(reference != null ? reference.resolve() : null);
+            }
+          }
+        }
+      }
+    });
+
+    return ref.get();
   }
 
   public static void performCompletion(@NotNull final String path,

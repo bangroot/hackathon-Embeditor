@@ -62,4 +62,13 @@ public class VimInstance {
 
     return null;
   }
+
+  public void navigate(int row, int column) {
+    try {
+      myClient.execute("navigate", new Object[]{new Integer(row), new Integer(column)});
+    }
+    catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
 }

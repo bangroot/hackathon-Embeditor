@@ -6,6 +6,7 @@ if !has('python')
 	finish
 endif
 
+" COMPLETION
 function! idea#complete(findstart, base)
 python << endpython
 import vim

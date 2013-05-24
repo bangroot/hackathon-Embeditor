@@ -76,7 +76,7 @@ public final class EmbeditorUtil {
             final Document document = fileCopy.getViewProvider().getDocument();
             if (document != null) {
               final Editor editor = editorFactory.createEditor(document, project, targetVirtualFile, false);
-              int offset = document.getLineStartOffset(line) + column;
+              int offset = lineAndColumntToOffset(document, line, column);
               editor.getCaretModel().moveToOffset(offset);
               CommandProcessor.getInstance().executeCommand(project, new Runnable() {
                 @Override
@@ -102,6 +102,10 @@ public final class EmbeditorUtil {
         }
       }
     });
+  }
+
+  private static int lineAndColumntToOffset(Document document, int line, int column) {
+    return document.getLineStartOffset(line) + column;
   }
 
   @NotNull

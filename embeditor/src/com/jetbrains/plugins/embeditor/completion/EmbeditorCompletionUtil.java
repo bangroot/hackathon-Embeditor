@@ -32,7 +32,7 @@ public class EmbeditorCompletionUtil {
     final Ref<Integer> result = Ref.create(null);
     EmbeditorUtil.performCompletion(path, fileContent, line, column, new EmbeditorUtil.CompletionCallback() {
       @Override
-      public void completionFinished(CompletionParameters parameters, LookupElement[] items, Document document) {
+      public void completionFinished(@NotNull CompletionParameters parameters, @NotNull LookupElement[] items, @NotNull Document document) {
         variants.addAll(Lists.newArrayList(items));
         result.set(EmbeditorUtil.getCompletionPrefixLength(parameters));
       }

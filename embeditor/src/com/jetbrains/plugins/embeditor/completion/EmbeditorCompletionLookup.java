@@ -61,7 +61,7 @@ public class EmbeditorCompletionLookup extends LightweightHint {
           try {
             terminal.getEmulator().sendString(lookupElement.getLookupString().substring(myPrefixLength));
           }
-          catch (IOException e1) {
+          catch (RuntimeException e1) {
             e1.printStackTrace();  //TODO
           }
           doHide();

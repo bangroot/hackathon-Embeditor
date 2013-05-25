@@ -38,19 +38,6 @@ public class EmbeddedTerminalEditor extends JBTerminal {
   public EmbeddedTerminalEditor(Project project, VimInstance instance) {
     myProject = project;
     myVimInstance = instance;
-    new Thread(new Runnable() {
-      @Override
-      public void run() {
-        while (true) {
-          updateHighlightingData();
-          try {
-            Thread.sleep(5000);
-          }
-          catch (InterruptedException e) {
-          }
-        }
-      }
-    }).start();
 
     myCompletionLookup = new EmbeditorCompletionLookup(project, this);
   }
@@ -81,12 +68,12 @@ public class EmbeddedTerminalEditor extends JBTerminal {
       }
 
       private boolean handleKey(KeyEvent e) {
-        if (e.getModifiers() == InputEvent.CTRL_MASK) {
-          if (e.getKeyChar() == ' ') {
+        if (e.getModifiers() == InputEvent.CTRL_MASK || e.getModifiers() == InputEvent.META_MASK) {
+          if (e.getKeyCode() == 32) {
             handleCompletion();
             return true;
           }
-          if (e.getKeyChar() == 'b' || e.getKeyChar() == 'B') {
+          if (e.getKeyCode() == 66) {
             handleResolve();
             return true;
           }

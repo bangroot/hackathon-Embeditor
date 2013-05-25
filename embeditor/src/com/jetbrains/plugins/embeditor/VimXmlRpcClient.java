@@ -25,7 +25,7 @@ public class VimXmlRpcClient {
   public VimXmlRpcClient(Process process, int port)
     throws MalformedURLException {
 
-    String hostname = NetUtils.getLocalHostString();
+    String hostname = "127.0.0.1";//NetUtils.getLocalHostString();
 
     URL url = new URL("http://" + hostname + ':' + port + "/RPC2");
 

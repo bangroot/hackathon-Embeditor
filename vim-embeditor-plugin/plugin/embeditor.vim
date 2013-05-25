@@ -15,8 +15,8 @@ def get_content():
    filecontent = '\n'.join(vim.current.buffer)
    return filecontent
 
-def save_file():
-   pass #TODO
+def save_and_quit():
+   vim.command('[wq]')
 
 def can_complete():
    if 'i' == vim.eval('mode()'):
@@ -29,7 +29,7 @@ def get_cursor():
 
 def navigate(row, column):
   row = int(row)+1
-  column = int(column)
+  column = int(column)+1
   if len(vim.current.buffer) >= row:
           vim.current.window.cursor = (row, 1)
           if len(vim.current.buffer[row]) >= column:
@@ -42,7 +42,7 @@ def start_server(host, port):
         raise
 
     server.register_function(get_cursor)
-    server.register_function(save_file)
+    server.register_function(save_and_quit)
     server.register_function(can_complete)
     server.register_function(get_content)
     server.register_function(navigate)

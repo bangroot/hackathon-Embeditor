@@ -12,6 +12,7 @@ import java.util.Vector;
 public class VimInstance {
   private final VimXmlRpcClient myClient;
   private VirtualFile myVFile;
+  private boolean myQuitSent = false;
 
   public VimInstance(VirtualFile vFile, Process process, int port) throws MalformedURLException {
     myVFile = vFile;
@@ -66,6 +67,19 @@ public class VimInstance {
   public void navigate(int row, int column) {
     try {
       myClient.execute("navigate", new Object[]{new Integer(row), new Integer(column)});
+    }
+    catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
+
+  public synchronized void saveAndQuit() {
+    if (myQuitSent) {
+      return;
+    }
+    myQuitSent = true;
+    try {
+      myClient.execute("save_and_quit", new Object[]{});
     }
     catch (Exception e) {
       e.printStackTrace();

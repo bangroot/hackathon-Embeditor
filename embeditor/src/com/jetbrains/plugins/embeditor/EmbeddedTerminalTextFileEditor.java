@@ -3,6 +3,7 @@ package com.jetbrains.plugins.embeditor;
 import com.google.common.collect.Maps;
 import com.intellij.codeHighlighting.BackgroundEditorHighlighter;
 import com.intellij.ide.structureView.StructureViewBuilder;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.fileEditor.*;
 import com.intellij.openapi.fileEditor.impl.FileEditorManagerImpl;
@@ -13,6 +14,8 @@ import com.intellij.openapi.util.UserDataHolderBase;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.pom.Navigatable;
 import com.intellij.util.ArrayUtil;
+import com.intellij.util.MessageBusUtil;
+import com.intellij.util.messages.impl.MessageBusConnectionImpl;
 import com.intellij.util.net.NetUtils;
 import com.intellij.util.ui.UIUtil;
 import com.jediterm.emulator.TtyConnector;
@@ -92,7 +95,14 @@ public class EmbeddedTerminalTextFileEditor extends UserDataHolderBase implement
         }
       }).start();
 
-      //FileEditorManagerImpl.getInstance(myProject).addFileEditorManagerListener(); TODO: quick vim on tab close
+      ApplicationManager.getApplication().getMessageBus().connect().subscribe(FileEditorManagerListener.Before.FILE_EDITOR_MANAGER,
+                                                                              new FileEditorManagerListener.Before.Adapter() {
+                                                                                @Override
+                                                                                public void beforeFileClosed(@NotNull FileEditorManager source,
+                                                                                                             @NotNull VirtualFile file) {
+                                                                                  myVimInstance.saveAndQuit();
+                                                                                }
+                                                                              });
     }
     catch (IOException e) {
       e.printStackTrace();

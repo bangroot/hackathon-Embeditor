@@ -34,13 +34,10 @@ To-do List
 * (done) Terminal window in IntelliJ instead of the editor that runs Vim
 * (done) IntelliJ-based completion and resolve for embedded Vim
 * (done) IntelliJ-based completion and resolve invoked from real Vim (vim plugin)
-* XML-RPC method in IntelliJ for running inspections for a file
-* XML-RPC method in IntelliJ for getting completion variants for an offset in
-  the file
-* Vim plugin that highlights code based on a list of errors/warnings
+* Vim plugin that highlights code based on a list of errors/warnings from IntelliJ
 * Synchronization of saved file contents between Vim and IntelliJ
-* Synchronization of edited file contents between Vim and IntelliJ
-* Vim plugin that shows a completion pop-up based on a list of variants
+* (done) Synchronization of edited file contents between Vim and IntelliJ
+
 
 
 Authors

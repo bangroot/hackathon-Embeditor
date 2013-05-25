@@ -31,7 +31,9 @@ Features
 To-do List
 ----------
 
-* Terminal window in IntelliJ instead of the editor that runs Vim and
+* (done) Terminal window in IntelliJ instead of the editor that runs Vim
+* (done) IntelliJ-based completion and resolve for embedded Vim
+* (done) IntelliJ-based completion and resolve invoked from real Vim (vim plugin)
 * XML-RPC method in IntelliJ for running inspections for a file
 * XML-RPC method in IntelliJ for getting completion variants for an offset in
   the file

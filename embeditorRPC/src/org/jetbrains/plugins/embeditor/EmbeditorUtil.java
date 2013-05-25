@@ -61,12 +61,13 @@ public final class EmbeditorUtil {
     if (el != null) {
       PsiFile resolveToFile = el.getContainingFile();
       if (resolveToFile != null) {
-        String resolveToPath = resolveToFile.getOriginalFile().getVirtualFile().getPath();
-        Document doc = PsiDocumentManager.getInstance(el.getProject()).getDocument(resolveToFile);
+        VirtualFile virtualFile = resolveToFile.getOriginalFile().getVirtualFile();
+        String resolveToPath = virtualFile != null ? virtualFile.getPath() : path;
+        Document doc = resolveToFile.getViewProvider().getDocument();
 
         int offset = el.getTextOffset();
         int resolveToRow = doc.getLineNumber(offset);
-        int resolveToColumn = offset - doc.getLineStartOffset(offset);
+        int resolveToColumn = offset - doc.getLineStartOffset(resolveToRow);
         return new ResolveOutcome(resolveToPath, resolveToRow, resolveToColumn);
       }
     }

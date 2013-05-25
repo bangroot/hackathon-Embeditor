@@ -9,9 +9,9 @@ public class ResolveOutcome {
   private final int myRow;
   public static final ResolveOutcome NULL = new ResolveOutcome("", -1, -1);
 
-  public ResolveOutcome(String path, int columnn, int row) {
+  public ResolveOutcome(String path, int row, int column) {
     myFilePath = path;
-    myColumn = columnn;
+    myColumn = column;
     myRow = row;
   }
 

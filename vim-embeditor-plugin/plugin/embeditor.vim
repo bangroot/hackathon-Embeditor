@@ -28,8 +28,12 @@ def get_cursor():
    return vim.current.window.cursor
 
 def navigate(row, column):
-   print(row)
-   print(column)
+  row = int(row)+1
+  column = int(column)
+  if len(vim.current.buffer) >= row:
+          vim.current.window.cursor = (row, 1)
+          if len(vim.current.buffer[row]) >= column:
+              vim.current.window.cursor = (row, column)
    
 def start_server(host, port):
     try:
@@ -50,10 +54,9 @@ p = os.getenv('VIM_RPC_PORT')
 if p is not None:
 	server_thread = threading.Thread(target=start_server,
                                      name='ServerThread',
-                                     args=('localhost', int(p)))
+                                     args=('127.0.0.1', int(p)))
 	server_thread.setDaemon(True)
 	server_thread.start()
-
 endpython
 endfunction
 

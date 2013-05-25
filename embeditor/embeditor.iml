@@ -7,13 +7,29 @@
       <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/resources" isTestSource="false" />
     </content>
-    <orderEntry type="jdk" jdkName="IDEA IU-122.395" jdkType="IDEA JDK" />
+    <orderEntry type="jdk" jdkName="IDEA jdk" jdkType="JavaSDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="terminal" />
     <orderEntry type="library" name="Guava" level="project" />
     <orderEntry type="module" module-name="jediterm" />
     <orderEntry type="library" name="XmlRPC" level="project" />
     <orderEntry type="module" module-name="embeditorRPC" />
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../../IDEA/plugins/remote-run/lib/jediterm-ssh-0.04.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="file://$MODULE_DIR$/../../IDEA/plugins/remote-run/src" />
+          <root url="file://$MODULE_DIR$/../../IDEA/plugins/remote-run/src" />
+        </SOURCES>
+      </library>
+    </orderEntry>
+    <orderEntry type="module" module-name="platform-api" />
+    <orderEntry type="module" module-name="lang-api" />
+    <orderEntry type="module" module-name="lang-impl" />
+    <orderEntry type="library" name="jediterm-pty" level="project" />
   </component>
 </module>
 

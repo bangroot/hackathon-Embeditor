@@ -38,6 +38,13 @@ To-do List
 * Synchronization of saved file contents between Vim and IntelliJ
 * (done) Synchronization of edited file contents between Vim and IntelliJ
 
+Problems
+--------
+
+* Terminal emulator needs to be improved
+* Handle the case of opening file in vim after incorrect termination
+* Soft-wrap in Vim prevents to map lines in buffer to file lines easyliy
+
 
 
 Authors

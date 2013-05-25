@@ -96,11 +96,22 @@ public class EmbeddedTerminalEditor extends JBTerminal {
       File f = new File(outcome.getFilePath());
       if (!FileUtil.filesEqual(f, new File(myVimInstance.getFilePath()))) {
         FileEditor[] editors = FileEditorManager.getInstance(myProject).openFile(VfsUtil.findFileByIoFile(f, true), true);
+        for (FileEditor e: editors) {
+          if (e instanceof EmbeddedTerminalEditor) {
+            EmbeddedTerminalEditor emb = (EmbeddedTerminalEditor)e;
+            emb.navigate(outcome);
+          }
+        }
       }
       else {
-        myVimInstance.navigate(outcome.getRow(), outcome.getColumn());
+        navigate(outcome);
       }
     }
+  }
+
+  private void navigate(ResolveOutcome outcome) {
+    myVimInstance.navigate(outcome.getRow(), outcome.getColumn());
+    getEmulator().sendBytes(new byte[]{27, 79, 68});  //TODO: this is a hack: we move cursor left to make it update position
   }
 
   @Override

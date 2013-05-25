@@ -25,8 +25,8 @@ We would like to see more options here:
 Features
 --------
 
-None yet.
-
+* Vim editor embedded into IntelliJ via terminal emulator
+* IntelliJ based completion and resolve support
 
 To-do List
 ----------

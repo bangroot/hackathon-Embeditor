@@ -25,20 +25,26 @@ We would like to see more options here:
 Features
 --------
 
-None yet.
-
+* Vim editor embedded into IntelliJ via terminal emulator
+* IntelliJ based completion and resolve support
 
 To-do List
 ----------
 
-* Terminal window in IntelliJ instead of the editor that runs Vim and
-* XML-RPC method in IntelliJ for running inspections for a file
-* XML-RPC method in IntelliJ for getting completion variants for an offset in
-  the file
-* Vim plugin that highlights code based on a list of errors/warnings
+* (done) Terminal window in IntelliJ instead of the editor that runs Vim
+* (done) IntelliJ-based completion and resolve for embedded Vim
+* (done) IntelliJ-based completion and resolve invoked from real Vim (vim plugin)
+* Vim plugin that highlights code based on a list of errors/warnings from IntelliJ
 * Synchronization of saved file contents between Vim and IntelliJ
-* Synchronization of edited file contents between Vim and IntelliJ
-* Vim plugin that shows a completion pop-up based on a list of variants
+* (done) Synchronization of edited file contents between Vim and IntelliJ
+
+Problems
+--------
+
+* Terminal emulator needs to be improved
+* Handle the case of opening file in vim after incorrect termination
+* Soft-wrap in Vim prevents to map lines in buffer to file lines easyliy
+
 
 
 Authors

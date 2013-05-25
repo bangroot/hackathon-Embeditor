@@ -5,6 +5,8 @@
   <vendor>Dmtiry Trofimov, Andrey Vlasovskikh</vendor>
   <description>Embedded terminal based editor</description>
   <depends>com.intellij.modules.platform</depends>
+  <depends>org.jetbrains.plugins.terminal</depends>
+
 
   <xi:include href="/META-INF/embeditor.xml" xpointer="xpointer(/idea-plugin/*)"/>
 

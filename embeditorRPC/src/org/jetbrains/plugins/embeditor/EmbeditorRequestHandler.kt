@@ -26,10 +26,13 @@ public class EmbeditorRequestHandler {
 
   public fun resolve(path: String, fileContent: String, line: Int, column: Int): Array<Hashtable<Any?, Any?>> {
     LOG?.debug("resolve(${path}:${line}:${column}")
+    val resolveOutcomes = EmbeditorUtil.getResolveOutcomes(path, fileContent, line, column)
     val result = Hashtable<Any?, Any?>()
-    result.put("path", path);
-    result.put("line", Integer.valueOf(5));
-    result.put("column", Integer.valueOf(10));
+    for (resolveOutcome in resolveOutcomes) {
+      result.put("path", resolveOutcome.getFilePath());
+      result.put("line", resolveOutcome.getRow());
+      result.put("column", resolveOutcome.getColumn());
+    }
     return array(result);
   }
 

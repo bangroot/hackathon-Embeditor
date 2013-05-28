@@ -1,5 +1,6 @@
 package org.jetbrains.plugins.embeditor;
 
+import com.google.common.collect.Iterables;
 import com.intellij.codeInsight.completion.*;
 import com.intellij.codeInsight.completion.impl.CompletionServiceImpl;
 import com.intellij.codeInsight.lookup.LookupElement;
@@ -27,6 +28,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedList;
 
 /**
  * User: zolotov
@@ -53,30 +57,45 @@ public final class EmbeditorUtil {
   }
 
   @NotNull
-  public static ResolveOutcome getResolveOutcome(@NotNull final String path,
-                                                 @NotNull final String fileContent,
-                                                 final int line,
-                                                 final int column) {
-    PsiElement el = performResolve(path, fileContent, line, column);
-    if (el != null) {
-      PsiFile resolveToFile = el.getContainingFile();
-      if (resolveToFile != null) {
-        VirtualFile virtualFile = resolveToFile.getOriginalFile().getVirtualFile();
-        String resolveToPath = virtualFile != null ? virtualFile.getPath() : path;
-        Document doc = resolveToFile.getViewProvider().getDocument();
-
-        int offset = el.getTextOffset();
-        int resolveToRow = doc.getLineNumber(offset);
-        int resolveToColumn = offset - doc.getLineStartOffset(resolveToRow);
-        return new ResolveOutcome(resolveToPath, resolveToRow, resolveToColumn);
-      }
-    }
-
-    return ResolveOutcome.NULL;
+  public static ResolveOutcome getSingleResolveOutcome(@NotNull final String path,
+                                                       @NotNull final String fileContent,
+                                                       final int line,
+                                                       final int column) {
+    Collection<ResolveOutcome> resolveOutcome = getResolveOutcomes(path, fileContent, line, column);
+    return resolveOutcome.size() == 1 ? Iterables.getFirst(resolveOutcome, ResolveOutcome.NULL) : ResolveOutcome.NULL;
   }
 
-  public static PsiElement performResolve(@NotNull final String path, @NotNull final String fileContent, final int line, final int column) {
-    final Ref<PsiElement> ref = Ref.create();
+  @NotNull
+  public static Collection<ResolveOutcome> getResolveOutcomes(@NotNull final String path,
+                                                              @NotNull final String fileContent,
+                                                              final int line,
+                                                              final int column) {
+    PsiElement[] elements = performResolve(path, fileContent, line, column);
+    if (elements.length > 0) {
+      Collection<ResolveOutcome> result = new LinkedList<ResolveOutcome>();
+      for (PsiElement element : elements) {
+        if (element != null) {
+          PsiFile resolveToFile = element.getContainingFile();
+          if (resolveToFile != null) {
+            VirtualFile virtualFile = resolveToFile.getOriginalFile().getVirtualFile();
+            String resolveToPath = virtualFile != null ? virtualFile.getPath() : path;
+            Document doc = resolveToFile.getViewProvider().getDocument();
+
+            assert doc != null;
+            int offset = element.getTextOffset();
+            int resolveToRow = doc.getLineNumber(offset);
+            int resolveToColumn = offset - doc.getLineStartOffset(resolveToRow);
+            result.add(new ResolveOutcome(resolveToPath, resolveToRow, resolveToColumn));
+          }
+        }
+      }
+      return result;
+    }
+    return Collections.emptyList();
+  }
+
+  private static PsiElement[] performResolve(@NotNull final String path, @NotNull final String fileContent, final int line, final int column) {
+    final Ref<PsiElement[]> ref = Ref.create();
     UIUtil.invokeAndWaitIfNeeded(new Runnable() {
       @Override
       public void run() {
@@ -89,17 +108,25 @@ public final class EmbeditorUtil {
           if (originalDocument != null) {
 
             PsiFile fileCopy =
-              fileContent != null
-              ? createDummyFile(project, fileContent, targetPsiFile)
-              : createFileCopy(targetPsiFile, originalDocument.getText()); //todo: delete and check
+                    fileContent != null
+                            ? createDummyFile(project, fileContent, targetPsiFile)
+                            : createFileCopy(targetPsiFile, originalDocument.getText()); //todo: delete and check
             final Document document = fileCopy.getViewProvider().getDocument();
             if (document != null) {
-              final Editor editor = editorFactory.createEditor(document, project, targetVirtualFile, false);
               int offset = lineAndColumntToOffset(document, line, column);
-
               PsiReference reference = fileCopy.findReferenceAt(offset);
-
-              ref.set(reference != null ? reference.resolve() : null);
+              if (reference instanceof PsiPolyVariantReference) {
+                ResolveResult[] resolveResults = ((PsiPolyVariantReference) reference).multiResolve(true);
+                PsiElement[] elements = new PsiElement[resolveResults.length];
+                for (int i = 0; i < resolveResults.length; i++) {
+                  elements[i] = resolveResults[i].getElement();
+                }
+                ref.set(elements);
+              } else if (reference != null) {
+                ref.set(new PsiElement[]{reference.resolve()});
+              } else {
+                ref.set(PsiElement.EMPTY_ARRAY);
+              }
             }
           }
         }
@@ -126,9 +153,9 @@ public final class EmbeditorUtil {
           if (originalDocument != null) {
 
             PsiFile fileCopy =
-              fileContent != null
-              ? createDummyFile(project, fileContent, targetPsiFile)
-              : createFileCopy(targetPsiFile, originalDocument.getText()); //todo: delete and check
+                    fileContent != null
+                            ? createDummyFile(project, fileContent, targetPsiFile)
+                            : createFileCopy(targetPsiFile, originalDocument.getText()); //todo: delete and check
             final Document document = fileCopy.getViewProvider().getDocument();
             if (document != null) {
               final Editor editor = editorFactory.createEditor(document, project, targetVirtualFile, false);
@@ -164,7 +191,7 @@ public final class EmbeditorUtil {
     final PsiFileFactory factory = PsiFileFactory.getInstance(project);
     final LightVirtualFile virtualFile = new LightVirtualFile(original.getName(), original.getFileType(), contents);
 
-    final PsiFile psiFile = ((PsiFileFactoryImpl)factory).trySetupPsiForFile(virtualFile, original.getLanguage(), false, true);
+    final PsiFile psiFile = ((PsiFileFactoryImpl) factory).trySetupPsiForFile(virtualFile, original.getLanguage(), false, true);
     assert psiFile != null;
     return psiFile;
   }
@@ -189,7 +216,7 @@ public final class EmbeditorUtil {
               if (pair != null && pair.first.getClass().equals(originalFile.getClass()) && isCopyUpToDate(pair.first, pair.second)) {
                 final PsiFile copy = pair.first;
                 if (copy.getViewProvider().getModificationStamp() > originalFile.getViewProvider().getModificationStamp()) {
-                  ((PsiModificationTrackerImpl)originalFile.getManager().getModificationTracker()).incCounter();
+                  ((PsiModificationTrackerImpl) originalFile.getManager().getModificationTracker()).incCounter();
                 }
                 final Document document = pair.second;
                 document.setText(newFileContent);
@@ -197,7 +224,7 @@ public final class EmbeditorUtil {
               }
             }
 
-            final PsiFile copy = (PsiFile)originalFile.copy();
+            final PsiFile copy = (PsiFile) originalFile.copy();
             final Document documentCopy = copy.getViewProvider().getDocument();
             if (documentCopy == null) {
               throw new IllegalStateException("Document copy can't be null");

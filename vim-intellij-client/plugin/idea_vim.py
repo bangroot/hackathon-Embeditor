@@ -19,13 +19,15 @@ def resolve():
     # todo: replace with for and add popup
     if len(result) > 0:
         resolveResult = result[0]
-        targetFilePath = resolveResult["path"]
-        targetLine = resolveResult["line"] + 1
-        targetColumn = resolveResult["column"]
+        targetFilePath, targetLine, targetColumn = extract_values_from_resolve_outcome(resolveResult)
         if file_path != targetFilePath:
             # todo: add file existing checking
             vim.command(":e %s" % targetFilePath)
         set_caret_pos(targetLine, targetColumn)
+
+
+def extract_values_from_resolve_outcome(resolve_outcome):
+    return resolve_outcome["path"], resolve_outcome["line"] + 1, resolve_outcome["column"]
 
 
 def complete():

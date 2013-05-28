@@ -8,7 +8,6 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Pair;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.vfs.VfsUtil;
-import com.intellij.openapi.vfs.VirtualFileManager;
 import com.jediterm.emulator.display.BackBuffer;
 import com.jediterm.emulator.display.LinesBuffer;
 import com.jediterm.emulator.display.StyleState;
@@ -90,7 +89,7 @@ public class EmbeddedTerminalEditor extends JBTerminal {
     String content = myVimInstance.getContent();
 
 
-    ResolveOutcome outcome = EmbeditorUtil.getResolveOutcome(myVimInstance.getFilePath(), content, cursor.first - 1, cursor.second);
+    ResolveOutcome outcome = EmbeditorUtil.getSingleResolveOutcome(myVimInstance.getFilePath(), content, cursor.first - 1, cursor.second);
 
     if (outcome != ResolveOutcome.NULL) {
       File f = new File(outcome.getFilePath());

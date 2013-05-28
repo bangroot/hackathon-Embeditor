@@ -69,68 +69,66 @@ public final class EmbeditorUtil {
                                                               @NotNull final String fileContent,
                                                               final int line,
                                                               final int column) {
-    PsiElement[] elements = performResolve(path, fileContent, line, column);
-    if (elements.length > 0) {
-      Collection<ResolveOutcome> result = new LinkedList<ResolveOutcome>();
-      for (PsiElement element : elements) {
-        if (element != null) {
-          PsiFile resolveToFile = element.getContainingFile();
-          if (resolveToFile != null) {
-            VirtualFile virtualFile = resolveToFile.getOriginalFile().getVirtualFile();
-            String resolveToPath = virtualFile != null ? virtualFile.getPath() : path;
-            Document doc = resolveToFile.getViewProvider().getDocument();
-
-            assert doc != null;
-            int offset = element.getTextOffset();
-            int resolveToRow = doc.getLineNumber(offset);
-            int resolveToColumn = offset - doc.getLineStartOffset(resolveToRow);
-            result.add(new ResolveOutcome(resolveToPath, resolveToRow, resolveToColumn));
-          }
-        }
-      }
-      return result;
-    }
-    return Collections.emptyList();
-  }
-
-  private static PsiElement[] performResolve(@NotNull final String path, @Nullable final String fileContent, final int line, final int column) {
-    final Ref<PsiElement[]> ref = Ref.create();
+    final Ref<Collection<ResolveOutcome>> ref = Ref.create();
     UIUtil.invokeAndWaitIfNeeded(new Runnable() {
       @Override
       public void run() {
-        final PsiFile targetPsiFile = findTargetFile(path);
-        final VirtualFile targetVirtualFile = targetPsiFile != null ? targetPsiFile.getVirtualFile() : null;
-        if (targetPsiFile != null && targetVirtualFile != null) {
-          final Project project = targetPsiFile.getProject();
-          final Document originalDocument = PsiDocumentManager.getInstance(project).getDocument(targetPsiFile);
-          if (originalDocument != null) {
+        PsiElement[] elements = performResolve(path, fileContent, line, column);
+        if (elements.length > 0) {
+          Collection<ResolveOutcome> result = new LinkedList<ResolveOutcome>();
+          for (PsiElement element : elements) {
+            if (element != null) {
+              PsiFile resolveToFile = element.getContainingFile();
+              if (resolveToFile != null) {
+                VirtualFile virtualFile = resolveToFile.getOriginalFile().getVirtualFile();
+                String resolveToPath = virtualFile != null ? virtualFile.getPath() : path;
+                Document doc = resolveToFile.getViewProvider().getDocument();
 
-            PsiFile fileCopy = fileContent != null
-                    ? createDummyFile(project, fileContent, targetPsiFile)
-                    : createDummyFile(project, targetPsiFile.getText(), targetPsiFile);
-            final Document document = fileCopy.getViewProvider().getDocument();
-            if (document != null) {
-              int offset = lineAndColumntToOffset(document, line, column);
-              PsiReference reference = fileCopy.findReferenceAt(offset);
-              if (reference instanceof PsiPolyVariantReference) {
-                ResolveResult[] resolveResults = ((PsiPolyVariantReference) reference).multiResolve(true);
-                PsiElement[] elements = new PsiElement[resolveResults.length];
-                for (int i = 0; i < resolveResults.length; i++) {
-                  elements[i] = resolveResults[i].getElement();
-                }
-                ref.set(elements);
-              } else if (reference != null) {
-                ref.set(new PsiElement[]{reference.resolve()});
-              } else {
-                ref.set(PsiElement.EMPTY_ARRAY);
+                assert doc != null;
+                int offset = element.getTextOffset();
+                int resolveToRow = doc.getLineNumber(offset);
+                int resolveToColumn = offset - doc.getLineStartOffset(resolveToRow);
+                result.add(new ResolveOutcome(resolveToPath, resolveToRow, resolveToColumn));
               }
             }
           }
+          ref.set(result);
         }
       }
     });
+    return !ref.isNull() ? ref.get() : Collections.<ResolveOutcome>emptyList();
+  }
 
-    return ref.get();
+  @NotNull
+  private static PsiElement[] performResolve(@NotNull final String path, @Nullable final String fileContent, final int line, final int column) {
+    final PsiFile targetPsiFile = findTargetFile(path);
+    final VirtualFile targetVirtualFile = targetPsiFile != null ? targetPsiFile.getVirtualFile() : null;
+    if (targetPsiFile != null && targetVirtualFile != null) {
+      final Project project = targetPsiFile.getProject();
+      final Document originalDocument = PsiDocumentManager.getInstance(project).getDocument(targetPsiFile);
+      if (originalDocument != null) {
+
+        PsiFile fileCopy = fileContent != null
+                ? createDummyFile(project, fileContent, targetPsiFile)
+                : createDummyFile(project, targetPsiFile.getText(), targetPsiFile);
+        final Document document = fileCopy.getViewProvider().getDocument();
+        if (document != null) {
+          int offset = lineAndColumntToOffset(document, line, column);
+          PsiReference reference = fileCopy.findReferenceAt(offset);
+          if (reference instanceof PsiPolyVariantReference) {
+            ResolveResult[] resolveResults = ((PsiPolyVariantReference) reference).multiResolve(true);
+            PsiElement[] elements = new PsiElement[resolveResults.length];
+            for (int i = 0; i < resolveResults.length; i++) {
+              elements[i] = resolveResults[i].getElement();
+            }
+            return elements;
+          } else if (reference != null) {
+            return new PsiElement[]{reference.resolve()};
+          }
+        }
+      }
+    }
+    return PsiElement.EMPTY_ARRAY;
   }
 
   public static void performCompletion(@NotNull final String path,

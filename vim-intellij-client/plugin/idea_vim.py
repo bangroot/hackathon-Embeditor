@@ -21,7 +21,7 @@ def resolve():
         resolveResult = result[0]
         targetFilePath = resolveResult["path"]
         targetLine = resolveResult["line"] + 1
-        targetColumn = resolveResult["column"] + 1
+        targetColumn = resolveResult["column"]
         if file_path != targetFilePath:
             # todo: add file existing checking
             vim.command(":e %s" % targetFilePath)

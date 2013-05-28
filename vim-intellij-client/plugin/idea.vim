@@ -36,5 +36,5 @@ set completefunc=idea#complete
 
 " RESOLVING
 " redefine C-] for DEMO
-nmap g] Python idea_vim.resolve()<CR>
+nmap <C-]> :Python idea_vim.resolve()<CR>
 

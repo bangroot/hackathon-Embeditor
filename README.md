@@ -53,6 +53,8 @@ The current state of the plugin looks like that:
 
 ![Embeditor](https://github.com/JetBrains/hackathon-Embeditor/raw/master/embeditor/doc/embeditor.png)
 
+Here you can see vim terminal session opened instead of normal IDEA editor with the IDEA completion popup.
+
 
 Authors
 -------

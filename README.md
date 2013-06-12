@@ -46,6 +46,13 @@ Problems
 * Soft-wrap in Vim prevents to map lines in buffer to file lines easyliy
 
 
+Demo
+----
+
+The current state of the plugin looks like that:
+
+![Embeditor](https://github.com/JetBrains/hackathon-Embeditor/raw/master/embeditor/doc/embeditor.png)
+
 
 Authors
 -------

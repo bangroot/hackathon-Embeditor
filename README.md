@@ -51,7 +51,7 @@ Demo
 
 The current state of the plugin looks like that:
 
-(https://github.com/JetBrains/hackathon-Embeditor/raw/master/embeditor/doc/embeditor.png)
+![Embeditor](https://github.com/JetBrains/hackathon-Embeditor/raw/master/embeditor/doc/embeditor.png)
 
 
 Authors

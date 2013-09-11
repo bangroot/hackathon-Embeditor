@@ -30,11 +30,8 @@ function! idea#complete(findstart, base)
   Python idea_vim.complete()
 endfunction
 
-" RESOLVING
-" redefine C-] for DEMO
-nmap <C-]> :Python idea_vim.resolve()<CR>
-
 augroup intellijintegration
     autocmd!
     autocmd FileType java,javascript setlocal omnifunc=idea#complete
+    autocmd FileType java,javascript nmap <buffer> <C-]> :Python idea_vim.resolve()<CR>
 augroup end

@@ -30,11 +30,11 @@ function! idea#complete(findstart, base)
   Python idea_vim.complete()
 endfunction
 
-" todo: replace with omnifunc for predefined file types only
-set completefunc=idea#complete
-" END COMPLETION
-
 " RESOLVING
 " redefine C-] for DEMO
 nmap <C-]> :Python idea_vim.resolve()<CR>
 
+augroup intellijintegration
+    autocmd!
+    autocmd FileType java,javascript setlocal omnifunc=idea#complete
+augroup end

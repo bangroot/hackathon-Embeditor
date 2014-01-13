@@ -25,8 +25,16 @@ function! idea#complete(findstart, base)
   Python idea_vim.complete()
 endfunction
 
+"" Autoactivate plugin functionality when within an IDEA project
+
+function! idea#autoactivate()
+   if !empty(finddir('.idea', './;~'))
+       setlocal omnifunc=idea#complete
+       nmap <buffer> <C-]> :Python idea_vim.resolve()<CR>
+   endif
+endfunction
+
 augroup intellijintegration
     autocmd!
-    autocmd FileType java,javascript setlocal omnifunc=idea#complete
-    autocmd FileType java,javascript nmap <buffer> <C-]> :Python idea_vim.resolve()<CR>
+    autocmd BufNewFile,BufReadPost * nested call idea#autoactivate()
 augroup end

@@ -46,12 +46,12 @@ public class EmbeditorRequestHandler {
         variants = items.map { it.getLookupString() }.toSet()
       }
     })
-    return variants.toArray(array<String>())
+    return variants.copyToArray()
   }
 
   public fun inspectCode(path: String, fileContent: String): Hashtable<String, String> {
     var result = Hashtable<String, String>()
-    UIUtil.invokeAndWaitIfNeeded(runnable {
+    UIUtil.invokeAndWaitIfNeeded(Runnable {
       val file = EmbeditorUtil.findTargetFile(path)
       if (file != null) {
         val problems = inspect(file)

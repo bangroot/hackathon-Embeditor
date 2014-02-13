@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/embeditorRPC/embeditorRPC.iml" filepath="$PROJECT_DIR$/embeditorRPC/embeditorRPC.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/hackathon-Embeditor.iml" filepath="$PROJECT_DIR$/.idea/hackathon-Embeditor.iml" />
+    </modules>
+  </component>
+</project>
+

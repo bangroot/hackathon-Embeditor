@@ -20,21 +20,21 @@ sys.path.insert(0, vim.eval('expand("<sfile>:p:h")'))
 import idea_vim
 ENDPYTHON
 
-" IdeaVim settings
-" todo: at the moment it doesn't work at all
-let g:ideavim_completion=1
-let g:ropevim_resolving=1
-
 " START COMPLETION
 function! idea#complete(findstart, base)
   Python idea_vim.complete()
 endfunction
 
-" todo: replace with omnifunc for predefined file types only
-set completefunc=idea#complete
-" END COMPLETION
+"" Autoactivate plugin functionality when within an IDEA project
 
-" RESOLVING
-" redefine C-] for DEMO
-nmap <C-]> :Python idea_vim.resolve()<CR>
+function! idea#autoactivate()
+   if !empty(finddir('.idea', './;~'))
+       setlocal omnifunc=idea#complete
+       nmap <buffer> <C-]> :Python idea_vim.resolve()<CR>
+   endif
+endfunction
 
+augroup intellijintegration
+    autocmd!
+    autocmd BufNewFile,BufReadPost * nested call idea#autoactivate()
+augroup end

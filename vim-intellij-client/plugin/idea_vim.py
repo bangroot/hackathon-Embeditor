@@ -62,6 +62,6 @@ def get_caret_position():
 
 def set_caret_pos(line, column):
     if len(vim.current.buffer) >= line:
-        vim.current.window.cursor = (column, 1)
+        vim.current.window.cursor = (line, 1)
         if len(vim.current.buffer[line - 1]) >= column:
             vim.current.window.cursor = (line, column)

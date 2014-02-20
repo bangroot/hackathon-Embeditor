@@ -21,14 +21,14 @@ def resolve():
     row, col = get_caret_position()
     file_content = current_buffer_content()
     results = server().resolve(file_path, file_content, row, col)
+    result_count = len(results)
 
-    # todo: replace with for and add popup
-    if len(results) > 0:
-        result = results[0]
-        if result['path'] != file_path:
-            # todo: add file existing checking
-            vim.command(":e %s" % result['path'])
-        set_caret_position(result['line'], result['column'])
+    if result_count == 0:
+        show_warning('No results.')
+    elif result_count == 1:
+        navigate_to_position(results[0])
+    else:
+        show_position_chooser(results)
 
 
 def complete():
@@ -84,7 +84,49 @@ def current_buffer_content_after_position(row, col):
     return '\n'.join([current_line_after_position] + last_lines)
 
 
+def show_warning(message):
+    vim.command('echohl WarningMsg')
+    vim.command('echomsg "%s"' % message)
+    vim.command('echohl None')
+
+
+def navigate_to_position(position):
+    if position['path'] != current_file_path():
+        vim.command('edit %s' % position['path'])
+    set_caret_position(position['line'], position['column'])
+
+
+def show_position_chooser(positions):
+    # use a location list; other approaches would be possible
+    show_location_list(positions)
+
+
+def show_location_list(locations):
+    location_list_data = [{'filename': shorten_path(location['path']),
+                           'lnum': to_vim_row(location['line']),
+                           'col': to_vim_col(location['column']),
+                           'text': location['linePreview'].strip()}
+                          for location in locations]
+
+    # replace contents of current window's location list
+    vim.Function('setloclist')(0, location_list_data, 'r')
+
+    # show current window's location list window
+    vim.command('lwindow')
+
+
+def shorten_path(path):
+    return vim.Function('fnamemodify')(path, ':~:.')
+
+
 # Utility
+
+def to_vim_row(row):
+    return to_vim_coordinates(row, 0)[0]
+
+
+def to_vim_col(col):
+    return to_vim_coordinates(0, col)[1]
 
 
 def to_vim_coordinates(row, col):

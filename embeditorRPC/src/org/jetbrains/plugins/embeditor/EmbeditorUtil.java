@@ -87,8 +87,11 @@ public final class EmbeditorUtil {
                 assert doc != null;
                 int offset = element.getTextOffset();
                 int resolveToRow = doc.getLineNumber(offset);
-                int resolveToColumn = offset - doc.getLineStartOffset(resolveToRow);
-                result.add(new ResolveOutcome(resolveToPath, resolveToRow, resolveToColumn));
+                int lineStartOffset = doc.getLineStartOffset(resolveToRow);
+                int lineEndOffset = doc.getLineEndOffset(resolveToRow);
+                int resolveToColumn = offset - lineStartOffset;
+                String resolveToLinePreview = doc.getText(new TextRange(lineStartOffset, lineEndOffset));
+                result.add(new ResolveOutcome(resolveToPath, resolveToRow, resolveToColumn, resolveToLinePreview));
               }
             }
           }

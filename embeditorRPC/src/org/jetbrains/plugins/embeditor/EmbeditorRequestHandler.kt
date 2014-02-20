@@ -27,13 +27,16 @@ public class EmbeditorRequestHandler {
   public fun resolve(path: String, fileContent: String, line: Int, column: Int): Array<Hashtable<Any?, Any?>> {
     LOG?.debug("resolve(${path}:${line}:${column}")
     val resolveOutcomes = EmbeditorUtil.getResolveOutcomes(path, fileContent, line, column)
-    val result = Hashtable<Any?, Any?>()
+    var results : Set<Hashtable<Any?, Any?>> = setOf()
     for (resolveOutcome in resolveOutcomes) {
-      result.put("path", resolveOutcome.getFilePath());
-      result.put("line", resolveOutcome.getRow());
-      result.put("column", resolveOutcome.getColumn());
+      val result = Hashtable<Any?, Any?>()
+      result.put("path", resolveOutcome.getFilePath())
+      result.put("line", resolveOutcome.getRow())
+      result.put("column", resolveOutcome.getColumn())
+      result.put("linePreview", resolveOutcome.getLinePreview());
+      results = results.plus(result).toSet()
     }
-    return array(result);
+    return results.copyToArray()
   }
 
   public fun getCompletionVariants(path: String, fileContent: String, line: Int, column: Int): Array<String> {

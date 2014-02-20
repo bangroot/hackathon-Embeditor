@@ -1,6 +1,11 @@
 " Prerequisites
 if &compatible || exists('g:loaded_intellij')
   finish
+elseif v:version < 704
+  echohl WarningMsg 
+  echomsg 'IntelliJ unavailable: requires Vim 7.4+'
+  echohl None
+  finish
 elseif !has('python')
   echohl WarningMsg 
   echomsg 'IntelliJ unavailable: requires Vim with python 2.x support'
@@ -13,16 +18,14 @@ let s:save_cpoptions = &cpoptions
 set cpoptions&vim
 
 " Initialize python
-python << ENDPYTHON
-import vim
-import sys
-sys.path.insert(0, vim.eval('expand("<sfile>:p:h")'))
-import idea_vim
-ENDPYTHON
+python import idea_vim
 
 " Completion 
 function! idea#complete(findstart, base)
-  python idea_vim.complete()
+  return pyeval('
+               \idea_vim.complete(int(vim.eval("a:findstart")), 
+               \                  vim.eval("a:base"))
+               \')
 endfunction
 
 " Autoactivation

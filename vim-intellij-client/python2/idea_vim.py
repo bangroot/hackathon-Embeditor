@@ -31,10 +31,7 @@ def resolve():
         show_position_chooser(results)
 
 
-def complete():
-    find_start = int(vim.eval('a:findstart'))
-    base_string = vim.eval('a:base')
-
+def complete(find_start, base_string):
     file_path = current_file_path()
     row, col = get_caret_position()
     file_content = (current_buffer_content_before_position(row, col) +
@@ -44,9 +41,7 @@ def complete():
     server_method = ('getCompletionStartOffsetInLine' if find_start else
                      'getCompletionVariants')
 
-    result = getattr(server(), server_method)(file_path, file_content, row, col)
-
-    vim.command('return %s' % result)
+    return getattr(server(), server_method)(file_path, file_content, row, col)
 
 
 # Vim-interfacing functions

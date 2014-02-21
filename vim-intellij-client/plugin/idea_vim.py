@@ -25,11 +25,10 @@ def resolve():
     # todo: replace with for and add popup
     if len(results) > 0:
         result = results[0]
-        path, line, column = resolve_result_values(result)
-        if file_path != path:
+        if result['path'] != file_path:
             # todo: add file existing checking
-            vim.command(":e %s" % path)
-        set_caret_position(line, column)
+            vim.command(":e %s" % result['path'])
+        set_caret_position(result['line'], result['column'])
 
 
 def complete():
@@ -59,16 +58,14 @@ def current_file_path():
 
 def get_caret_position():
     # todo: col should consider tabwidth
-    row, col = vim.current.window.cursor
-    row = row - 1
-    return row, col
+    return to_standard_coordinates(*vim.current.window.cursor)
 
 
 def set_caret_position(line, column):
-    if len(vim.current.buffer) >= line:
-        vim.current.window.cursor = (line, 1)
-        if len(vim.current.buffer[line - 1]) >= column:
-            vim.current.window.cursor = (line, column)
+    if line < len(vim.current.buffer):
+        vim.current.window.cursor = to_vim_coordinates(line, 0)
+        if column < len(vim.current.buffer[line]):
+            vim.current.window.cursor = to_vim_coordinates(line, column)
 
 
 def current_buffer_content():
@@ -90,5 +87,11 @@ def current_buffer_content_after_position(row, col):
 # Utility
 
 
-def resolve_result_values(result):
-    return result["path"], result["line"] + 1, result["column"]
+def to_vim_coordinates(row, col):
+    '''Transform from standard coordinates to vim coordinates.'''
+    return (row + 1, col)
+
+
+def to_standard_coordinates(row, col):
+    '''Transform from vim coordinates to standard coordinates.'''
+    return (row - 1, col)

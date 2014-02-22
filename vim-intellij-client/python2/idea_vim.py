@@ -1,5 +1,10 @@
-import vim
+import httplib
+import socket
 import xmlrpclib
+from functools import wraps
+
+import vim
+
 
 IDEA_RPC_HOST = 'http://localhost'
 IDEA_RPC_PORT = 63341
@@ -13,9 +18,31 @@ def server():
     return xmlrpclib.ServerProxy(server_url).embeditor
 
 
+def rpc(function):
+    '''A decorator to protect functions using rpc from server errors.'''
+
+    @wraps(function)
+    def decorated_function(*args, **kwargs):
+        try:
+            function(*args, **kwargs)
+        except socket.error:
+            show_error('IntelliJ server unavailable.')
+        except xmlrpclib.Fault as e:
+            show_error('IntelliJ server rpc fault: %d - %s.' % (e.faultCode,
+                                                            e.faultString))
+        except xmlrpclib.ProtocolError as e:
+            show_error('IntelliJ server rpc protocol error: %d - %s.' %
+                       (e.errcode, e.errmsg))
+        except httplib.HTTPException as e:
+            show_error('IntelliJ server http protocol error: %s.' % e.message)
+
+    return decorated_function
+
+
 # Main functionality (externally invocable)
 
 
+@rpc
 def resolve():
     file_path = current_file_path()
     row, col = get_caret_position()
@@ -31,6 +58,7 @@ def resolve():
         show_position_chooser(results)
 
 
+@rpc
 def complete(find_start, base_string):
     file_path = current_file_path()
     row, col = get_caret_position()
@@ -77,6 +105,13 @@ def current_buffer_content_after_position(row, col):
     current_line_after_position = vim.current.buffer[row][col:]
     last_lines = vim.current.buffer[row + 1:]
     return '\n'.join([current_line_after_position] + last_lines)
+
+
+def show_error(message):
+    vim.command('redraw')
+    vim.command('echohl ErrorMsg')
+    vim.command('echomsg "%s"' % message)
+    vim.command('echohl None')
 
 
 def show_warning(message):

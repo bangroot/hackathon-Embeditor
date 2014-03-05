@@ -27,14 +27,14 @@ public class EmbeditorRequestHandler {
   public fun resolve(path: String, fileContent: String, line: Int, column: Int): Array<Hashtable<Any?, Any?>> {
     LOG?.debug("resolve(${path}:${line}:${column}")
     val resolveOutcomes = EmbeditorUtil.getResolveOutcomes(path, fileContent, line, column)
-    var results : Set<Hashtable<Any?, Any?>> = setOf()
+    var results : List<Hashtable<Any?, Any?>> = listOf()
     for (resolveOutcome in resolveOutcomes) {
       val result = Hashtable<Any?, Any?>()
       result.put("path", resolveOutcome.getFilePath())
       result.put("line", resolveOutcome.getRow())
       result.put("column", resolveOutcome.getColumn())
       result.put("text", resolveOutcome.getText())
-      results = results.plus(result).toSet()
+      results += result
     }
     return results.copyToArray()
   }

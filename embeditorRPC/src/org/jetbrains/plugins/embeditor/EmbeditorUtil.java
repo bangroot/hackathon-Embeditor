@@ -23,6 +23,7 @@ import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
 import com.intellij.psi.impl.PsiFileFactoryImpl;
+import com.intellij.psi.presentation.java.SymbolPresentationUtil;
 import com.intellij.testFramework.LightVirtualFile;
 import com.intellij.util.ui.UIUtil;
 import org.jetbrains.annotations.NotNull;
@@ -88,10 +89,9 @@ public final class EmbeditorUtil {
                 int offset = element.getTextOffset();
                 int resolveToRow = doc.getLineNumber(offset);
                 int lineStartOffset = doc.getLineStartOffset(resolveToRow);
-                int lineEndOffset = doc.getLineEndOffset(resolveToRow);
                 int resolveToColumn = offset - lineStartOffset;
-                String resolveToLinePreview = doc.getText(new TextRange(lineStartOffset, lineEndOffset));
-                result.add(new ResolveOutcome(resolveToPath, resolveToRow, resolveToColumn, resolveToLinePreview));
+                String resolveToText = SymbolPresentationUtil.getSymbolPresentableText(element);
+                result.add(new ResolveOutcome(resolveToPath, resolveToRow, resolveToColumn, resolveToText));
               }
             }
           }

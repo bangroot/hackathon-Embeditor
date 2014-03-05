@@ -33,7 +33,7 @@ public class EmbeditorRequestHandler {
       result.put("path", resolveOutcome.getFilePath())
       result.put("line", resolveOutcome.getRow())
       result.put("column", resolveOutcome.getColumn())
-      result.put("linePreview", resolveOutcome.getLinePreview());
+      result.put("text", resolveOutcome.getText())
       results = results.plus(result).toSet()
     }
     return results.copyToArray()

@@ -9,14 +9,13 @@ public class ResolveOutcome {
   private final String myFilePath;
   private final int myColumn;
   private final int myRow;
+  private final String myText; // a text to help identify outcome (element's presentation text, line preview, etc.)
 
-  private final String myLinePreview;
-
-  public ResolveOutcome(String path, int row, int column, String linePreview) {
+  public ResolveOutcome(String path, int row, int column, String text) {
     myFilePath = path;
     myColumn = column;
     myRow = row;
-    myLinePreview = linePreview != null ? linePreview : "";
+    myText = text != null ? text : "";
   }
 
   public String getFilePath() {
@@ -26,5 +25,5 @@ public class ResolveOutcome {
     return myColumn;
   }
   public int getRow() { return myRow; }
-  public String getLinePreview() { return myLinePreview; }
+  public String getText() { return myText; }
 }

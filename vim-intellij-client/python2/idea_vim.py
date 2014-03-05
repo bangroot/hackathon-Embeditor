@@ -135,7 +135,7 @@ def show_location_list(locations):
     location_list_data = [{'filename': shorten_path(location['path']),
                            'lnum': to_vim_row(location['line']),
                            'col': to_vim_col(location['column']),
-                           'text': location['linePreview'].strip()}
+                           'text': location['text'].strip()}
                           for location in locations]
 
     # replace contents of current window's location list

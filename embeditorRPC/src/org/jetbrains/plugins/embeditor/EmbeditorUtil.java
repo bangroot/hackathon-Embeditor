@@ -33,6 +33,7 @@ import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
+import java.util.List;
 
 /**
  * User: zolotov
@@ -66,17 +67,17 @@ public final class EmbeditorUtil {
   }
 
   @NotNull
-  public static Collection<ResolveOutcome> getResolveOutcomes(@NotNull final String path,
+  public static List<ResolveOutcome> getResolveOutcomes(@NotNull final String path,
                                                               @NotNull final String fileContent,
                                                               final int line,
                                                               final int column) {
-    final Ref<Collection<ResolveOutcome>> ref = Ref.create();
+    final Ref<List<ResolveOutcome>> ref = Ref.create();
     UIUtil.invokeAndWaitIfNeeded(new Runnable() {
       @Override
       public void run() {
         PsiElement[] elements = performResolve(path, fileContent, line, column);
         if (elements.length > 0) {
-          Collection<ResolveOutcome> result = new LinkedList<ResolveOutcome>();
+          List<ResolveOutcome> result = new LinkedList<ResolveOutcome>();
           for (PsiElement element : elements) {
             if (element != null) {
               PsiFile resolveToFile = element.getContainingFile();

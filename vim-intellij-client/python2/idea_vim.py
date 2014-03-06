@@ -24,7 +24,7 @@ def rpc(function):
     @wraps(function)
     def decorated_function(*args, **kwargs):
         try:
-            function(*args, **kwargs)
+            return function(*args, **kwargs)
         except socket.error:
             show_error('IntelliJ server unavailable.')
         except xmlrpclib.Fault as e:
@@ -70,7 +70,6 @@ def complete(find_start, base_string):
                      'getCompletionVariants')
 
     return getattr(server(), server_method)(file_path, file_content, row, col)
-
 
 # Vim-interfacing functions
 

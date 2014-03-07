@@ -4,10 +4,13 @@ import com.intellij.codeInsight.completion.CompletionParameters;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
+import com.intellij.openapi.util.Ref;
 import com.intellij.psi.PsiFile;
+import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.ui.UIUtil;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Collection;
 import java.util.Hashtable;
 import java.util.List;
 
@@ -33,35 +36,32 @@ public class EmbeditorRequestHandler {
 
     public int getCompletionStartOffsetInLine(String path, String fileContent, int line, int column) {
         LOG.debug(String.format("getCompletionStartOffsetInLine(%s:%d:%d)", path, line, column));
-        final int[] resultWrapper = new int[1];
+        final Ref<Integer> integerRef = Ref.create(0);
         EmbeditorUtil.performCompletion(path, fileContent, line, column, new EmbeditorUtil.CompletionCallback() {
             @Override
             public void completionFinished(@NotNull CompletionParameters parameters,
                                            @NotNull LookupElement[] items,
                                            @NotNull Document document) {
-                resultWrapper[0] = EmbeditorUtil.getOffsetFromLineStart(parameters, document);
+                integerRef.set(EmbeditorUtil.getOffsetFromLineStart(parameters, document));
             }
         });
-        return resultWrapper[0];
+        return integerRef.get();
     }
 
     public String[] getCompletionVariants(String path, String fileContent, int line, int column) {
         LOG.debug(String.format("getCompletionVariants(%s:%d:%d)", path, line, column));
-        final String[][] resultsWrapper = new String[1][];
+        final Collection<String> completionVariants = ContainerUtil.newLinkedList();
         EmbeditorUtil.performCompletion(path, fileContent, line, column, new EmbeditorUtil.CompletionCallback() {
             @Override
             public void completionFinished(@NotNull CompletionParameters parameters,
                                            @NotNull LookupElement[] items,
                                            @NotNull Document document) {
-                String[] results = new String[items.length];
-                for (int i = 0; i < items.length; i++) {
-                    LookupElement item = items[i];
-                    results[i] = item.getLookupString();
-                }
-                resultsWrapper[0] = results;
+              for (LookupElement item : items) {
+                completionVariants.add(item.getLookupString());
+              }
             }
         });
-        return resultsWrapper[0];
+        return completionVariants.toArray(new String[completionVariants.size()]);
     }
 
     public Hashtable[] inspectCode(final String path, String fileContent) {

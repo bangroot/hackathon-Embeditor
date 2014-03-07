@@ -122,7 +122,7 @@ public final class EmbeditorUtil {
                            : createDummyFile(project, targetPsiFile.getText(), targetPsiFile);
         final Document document = fileCopy.getViewProvider().getDocument();
         if (document != null) {
-          int offset = lineAndColumntToOffset(document, line, column);
+          int offset = lineAndColumnToOffset(document, line, column);
           PsiReference reference = fileCopy.findReferenceAt(offset);
           if (reference instanceof PsiPolyVariantReference) {
             ResolveResult[] resolveResults = ((PsiPolyVariantReference)reference).multiResolve(true);
@@ -163,7 +163,7 @@ public final class EmbeditorUtil {
             final Document document = fileCopy.getViewProvider().getDocument();
             if (document != null) {
               final Editor editor = editorFactory.createEditor(document, project, targetVirtualFile, false);
-              int offset = lineAndColumntToOffset(document, line, column);
+              int offset = lineAndColumnToOffset(document, line, column);
               editor.getCaretModel().moveToOffset(offset);
               CommandProcessor.getInstance().executeCommand(project, new Runnable() {
                 @Override
@@ -200,7 +200,7 @@ public final class EmbeditorUtil {
     return psiFile;
   }
 
-  private static int lineAndColumntToOffset(Document document, int line, int column) {
+  private static int lineAndColumnToOffset(Document document, int line, int column) {
     return document.getLineStartOffset(line) + column;
   }
 

@@ -1,15 +1,15 @@
 <idea-plugin version="2">
-    <name>Embeditor</name>
-    <id>org.jetbrains.plugins.embeditor.rpc</id>
-    <version>0.1</version>
-    <vendor>Dmtiry Trofimov, Andrey Vlasovskikh, Alexander Zolotov</vendor>
-    <description>RPC server for external editors</description>
-    <depends>com.intellij.modules.platform</depends>
+  <name>Embeditor</name>
+  <id>org.jetbrains.plugins.embeditor.rpc</id>
+  <version>0.1</version>
+  <vendor>Dmtiry Trofimov, Andrey Vlasovskikh, Alexander Zolotov</vendor>
+  <description>RPC server for external editors</description>
+  <depends>com.intellij.modules.platform</depends>
 
-    <extensions defaultExtensionNs="com.intellij">
-        <xmlRpcHandler name="embeditor" implementation="org.jetbrains.plugins.embeditor.EmbeditorRequestHandler"/>
+  <extensions defaultExtensionNs="com.intellij">
+    <xmlRpcHandler name="embeditor" implementation="org.jetbrains.plugins.embeditor.EmbeditorRequestHandler"/>
 
 
-        <errorHandler implementation="com.intellij.diagnostic.ITNReporter"/>
-    </extensions>
+    <errorHandler implementation="com.intellij.diagnostic.ITNReporter"/>
+  </extensions>
 </idea-plugin>

@@ -21,9 +21,16 @@ public class ResolveOutcome {
   public String getFilePath() {
     return myFilePath;
   }
+
   public int getColumn() {
     return myColumn;
   }
-  public int getRow() { return myRow; }
-  public String getText() { return myText; }
+
+  public int getRow() {
+    return myRow;
+  }
+
+  public String getText() {
+    return myText;
+  }
 }

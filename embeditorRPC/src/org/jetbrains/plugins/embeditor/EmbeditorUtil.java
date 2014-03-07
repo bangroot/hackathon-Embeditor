@@ -63,16 +63,16 @@ public final class EmbeditorUtil {
                                                        final int line,
                                                        final int column) {
     Collection<ResolveOutcome> resolveOutcome = getResolveOutcomes(path, fileContent, line, column);
-    return resolveOutcome.size() == 1 
-        ? ContainerUtil.getFirstItem(resolveOutcome, ResolveOutcome.NULL) 
-        : ResolveOutcome.NULL;
+    return resolveOutcome.size() == 1
+           ? ContainerUtil.getFirstItem(resolveOutcome, ResolveOutcome.NULL)
+           : ResolveOutcome.NULL;
   }
 
   @NotNull
   public static List<ResolveOutcome> getResolveOutcomes(@NotNull final String path,
-                                                              @NotNull final String fileContent,
-                                                              final int line,
-                                                              final int column) {
+                                                        @NotNull final String fileContent,
+                                                        final int line,
+                                                        final int column) {
     final Ref<List<ResolveOutcome>> ref = Ref.create();
     UIUtil.invokeAndWaitIfNeeded(new Runnable() {
       @Override
@@ -106,7 +106,10 @@ public final class EmbeditorUtil {
   }
 
   @NotNull
-  private static PsiElement[] performResolve(@NotNull final String path, @Nullable final String fileContent, final int line, final int column) {
+  private static PsiElement[] performResolve(@NotNull final String path,
+                                             @Nullable final String fileContent,
+                                             final int line,
+                                             final int column) {
     final PsiFile targetPsiFile = findTargetFile(path);
     final VirtualFile targetVirtualFile = targetPsiFile != null ? targetPsiFile.getVirtualFile() : null;
     if (targetPsiFile != null && targetVirtualFile != null) {
@@ -115,20 +118,21 @@ public final class EmbeditorUtil {
       if (originalDocument != null) {
 
         PsiFile fileCopy = fileContent != null
-                ? createDummyFile(project, fileContent, targetPsiFile)
-                : createDummyFile(project, targetPsiFile.getText(), targetPsiFile);
+                           ? createDummyFile(project, fileContent, targetPsiFile)
+                           : createDummyFile(project, targetPsiFile.getText(), targetPsiFile);
         final Document document = fileCopy.getViewProvider().getDocument();
         if (document != null) {
           int offset = lineAndColumntToOffset(document, line, column);
           PsiReference reference = fileCopy.findReferenceAt(offset);
           if (reference instanceof PsiPolyVariantReference) {
-            ResolveResult[] resolveResults = ((PsiPolyVariantReference) reference).multiResolve(true);
+            ResolveResult[] resolveResults = ((PsiPolyVariantReference)reference).multiResolve(true);
             PsiElement[] elements = new PsiElement[resolveResults.length];
             for (int i = 0; i < resolveResults.length; i++) {
               elements[i] = resolveResults[i].getElement();
             }
             return elements;
-          } else if (reference != null) {
+          }
+          else if (reference != null) {
             return new PsiElement[]{reference.resolve()};
           }
         }
@@ -154,8 +158,8 @@ public final class EmbeditorUtil {
           if (originalDocument != null) {
 
             PsiFile fileCopy = fileContent != null
-                    ? createDummyFile(project, fileContent, targetPsiFile)
-                    : createDummyFile(project, targetPsiFile.getText(), targetPsiFile);
+                               ? createDummyFile(project, fileContent, targetPsiFile)
+                               : createDummyFile(project, targetPsiFile.getText(), targetPsiFile);
             final Document document = fileCopy.getViewProvider().getDocument();
             if (document != null) {
               final Editor editor = editorFactory.createEditor(document, project, targetVirtualFile, false);
@@ -191,7 +195,7 @@ public final class EmbeditorUtil {
     final PsiFileFactory factory = PsiFileFactory.getInstance(project);
     final LightVirtualFile virtualFile = new LightVirtualFile(original.getName(), original.getFileType(), contents);
 
-    final PsiFile psiFile = ((PsiFileFactoryImpl) factory).trySetupPsiForFile(virtualFile, original.getLanguage(), false, true);
+    final PsiFile psiFile = ((PsiFileFactoryImpl)factory).trySetupPsiForFile(virtualFile, original.getLanguage(), false, true);
     assert psiFile != null;
     return psiFile;
   }

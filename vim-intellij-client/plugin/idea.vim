@@ -19,6 +19,7 @@ set cpoptions&vim
 
 " Initialize python
 python import idea_vim
+python import vim
 
 " Completion 
 function! idea#complete(findstart, base)

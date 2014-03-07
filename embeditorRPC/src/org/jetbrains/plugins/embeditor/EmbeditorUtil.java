@@ -1,6 +1,5 @@
 package org.jetbrains.plugins.embeditor;
 
-import com.google.common.collect.Iterables;
 import com.intellij.codeInsight.completion.*;
 import com.intellij.codeInsight.completion.impl.CompletionServiceImpl;
 import com.intellij.codeInsight.lookup.LookupElement;
@@ -25,6 +24,7 @@ import com.intellij.psi.*;
 import com.intellij.psi.impl.PsiFileFactoryImpl;
 import com.intellij.psi.presentation.java.SymbolPresentationUtil;
 import com.intellij.testFramework.LightVirtualFile;
+import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.ui.UIUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -63,7 +63,9 @@ public final class EmbeditorUtil {
                                                        final int line,
                                                        final int column) {
     Collection<ResolveOutcome> resolveOutcome = getResolveOutcomes(path, fileContent, line, column);
-    return resolveOutcome.size() == 1 ? Iterables.getFirst(resolveOutcome, ResolveOutcome.NULL) : ResolveOutcome.NULL;
+    return resolveOutcome.size() == 1 
+        ? ContainerUtil.getFirstItem(resolveOutcome, ResolveOutcome.NULL) 
+        : ResolveOutcome.NULL;
   }
 
   @NotNull

@@ -3,8 +3,8 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/embeditorRPC/embeditorRPC.iml" filepath="$PROJECT_DIR$/embeditorRPC/embeditorRPC.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/hackathon-Embeditor.iml" filepath="$PROJECT_DIR$/.idea/hackathon-Embeditor.iml" />
+      <module fileurl="file://$PROJECT_DIR$/vim-embeditor-plugin/vim-embeditor-plugin.iml" filepath="$PROJECT_DIR$/vim-embeditor-plugin/vim-embeditor-plugin.iml" />
+      <module fileurl="file://$PROJECT_DIR$/vim-intellij-client/vim-intellij-client.iml" filepath="$PROJECT_DIR$/vim-intellij-client/vim-intellij-client.iml" />
     </modules>
   </component>
 </project>
-

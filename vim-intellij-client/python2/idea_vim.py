@@ -7,7 +7,7 @@ import vim
 
 
 IDEA_RPC_HOST = 'http://localhost'
-IDEA_RPC_PORT = 63341
+IDEA_RPC_PORT = 63342
 
 
 # Server proxy

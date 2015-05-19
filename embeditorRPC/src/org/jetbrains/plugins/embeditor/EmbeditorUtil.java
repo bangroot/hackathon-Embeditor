@@ -171,13 +171,10 @@ public final class EmbeditorUtil {
                   final CodeCompletionHandlerBase handler = new CodeCompletionHandlerBase(CompletionType.BASIC) {
 
                     @Override
-                    protected void completionFinished(int offset1,
-                                                      int offset2,
-                                                      @NotNull CompletionProgressIndicator indicator,
-                                                      @NotNull LookupElement[] items,
+                    protected void completionFinished(@NotNull CompletionProgressIndicator indicator,
                                                       boolean hasModifiers) {
                       CompletionServiceImpl.setCompletionPhase(new CompletionPhase.ItemsCalculated(indicator));
-                      completionCallback.completionFinished(indicator.getParameters(), items, document);
+                      completionCallback.completionFinished(indicator.getParameters(), indicator.getLookup().getItems().toArray(new LookupElement[0]), document);
                     }
                   };
 
